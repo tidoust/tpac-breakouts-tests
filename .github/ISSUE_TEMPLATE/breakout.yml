@@ -1,61 +1,100 @@
-name: Breakout session proposal
-description: Propose a breakout session
-labels: ["session", "2023"]
-assignees:
-  - tidoust
+name: Session proposal
+description: Propose to chair a breakout session at TPAC
+labels: ["session"]
 body:
+
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this [bug report](https://github.com/tidoust/tpac-breakout-tests/issues)!
-  - type: input
-    id: contact
+        Thank you for proposing to chair a TPAC breakout session.
+        Please review the [good practices for session chairs](https://github.com/w3c/tpac-breakouts/wiki/Good-Practices-for-Session-Chairs).
+        Use issue comments for discussion of the session. Please avoid editing the markdown directly except to add links to materials as described below.
+
+  - type: textarea
+    id: description
     attributes:
-      label: Contact Details
-      description: How can we get in touch with you if we need [more info](https://github.com/tidoust/tpac-breakout-tests/issues)?
-      placeholder: ex. email@example.com
+      label: Session description
+      description: |
+        A short description of topic and goals of your breakout session. Simple markdown only please (inline formatting, links, lists).
+        Note: Please ensure that the session is [in scope for a TPAC breakout](https://github.com/w3c/tpac-breakouts/wiki/Policies#session-scope).
+    validations:
+      required: true
+
+  - type: textarea
+    id: chairs
+    attributes:
+      label: Additional session chairs (Optional)
+      description: |
+        GitHub identities of additional session chairs other than you. Space- or comma-separated list.
     validations:
       required: false
-  - type: textarea
-    id: what-happened
+
+  - type: input
+    id: shortname
     attributes:
-      label: What happened?
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
-      value: "A bug happened!"
+      label: IRC channel (Optional)
+      description: |
+        Shortname for the IRC channel. If not provided, channel name will be generated from the session title.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Preferences
+
+  - type: dropdown
+    id: duration
+    attributes:
+      label: Session duration
+      options:
+        - 60 minutes (Default)
+        - 30 minutes
     validations:
       required: true
-  - type: dropdown
-    id: version
+
+  - type: textarea
+    id: conflicts
     attributes:
-      label: Version
-      description: What version of our software are you running?
+      label: Scheduling conflicts (Optional)
+      description: |
+        Please list any sessions for which you have a strong preference to avoid a scheduling conflict.
+        Comma-separated list of sessions identified by issue numbers in this GitHub repo (e.g., `#32, #18`).
+    validations:
+      required: false
+
+  - type: dropdown
+    id: capacity
+    attributes:
+      label: Room capacity
+      description: |
+        Room capacity.
       options:
-        - 1.0.2 (Default)
-        - 1.0.3 (Edge)
+        - Don't know (Default)
+        - Small (fewer than 20 people)
+        - Large (20-45 people)
+        - Really quite large (more than 45 people)
     validations:
       required: true
-  - type: dropdown
-    id: browsers
-    attributes:
-      label: What browsers are you seeing the problem on?
-      multiple: true
-      options:
-        - Firefox
-        - Chrome
-        - Safari
-        - Microsoft Edge
+
   - type: textarea
-    id: logs
+    id: comments
     attributes:
-      label: Relevant log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
-      render: shell
-  - type: checkboxes
-    id: terms
+      label: Comments (Optional)
+      description: |
+        Any additional input, including timing constraints, that we should be aware of.
+    validations:
+      required: false
+
+  - type: textarea
+    id: materials
     attributes:
-      label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://example.com)
-      options:
-        - label: I agree to follow this project's Code of Conduct
-          required: true
+      label: Meeting materials
+      description: |
+        As the agenda and meeting materials become available, you will be able to update your session description in markdown to add links. Similarly, after the meeting, you can link to minutes.
+
+        **PLEASE ONLY EDIT BY REPLACING @@ with URLs!**
+      value: |
+        - Agenda: @@
+        - Slides: @@
+        - Minutes: @@
