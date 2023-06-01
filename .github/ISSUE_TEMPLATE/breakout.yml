@@ -15,7 +15,7 @@ body:
     attributes:
       label: Session description
       description: |
-        A short description of your breakout session. Simple markdown only please (inline formatting, links, lists).
+        Simple markdown only please (inline formatting, links, lists).
         Note: Please ensure that the session is [in scope for a TPAC breakout](https://github.com/w3c/tpac-breakouts/wiki/Policies#session-scope).
     validations:
       required: true
@@ -23,9 +23,7 @@ body:
   - type: input
     id: goal
     attributes:
-      label: Session goal
-      description: |
-        Main goal of your breakout session.
+      label: Main session goal
     validations:
       required: true
 
