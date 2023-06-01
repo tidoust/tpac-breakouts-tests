@@ -32,4 +32,4 @@ jobs:
           # A valid Personal Access Token (classic version) with project scope
           # needs to be added as secret to the repo, because the action uses
           # the GraphQL API under the hoods
-          github-token: ${{ secrets.GRAHQL_TOKEN }}
+          github-token: ${{ secrets.GRAPHQL_TOKEN }}
