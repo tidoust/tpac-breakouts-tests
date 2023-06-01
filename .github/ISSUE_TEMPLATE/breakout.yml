@@ -78,7 +78,7 @@ body:
       label: Scheduling conflicts (Optional)
       description: |
         Please list any sessions for which you have a strong preference to avoid a scheduling conflict.
-        Comma-separated list of sessions identified by issue numbers in this GitHub repo (e.g., `#32, #18`).
+        Space- or comma-separated list of sessions identified by issue numbers in this GitHub repo (e.g., `#32 #18`).
     validations:
       required: false
 
