@@ -52,8 +52,7 @@ body:
     attributes:
       label: Attendance
       description: |
-        TPAC breakouts sessions are usually open to the public (including remote attendees). Please only select “Restricted” if there is a compelling
-  reason why the session should only be open to TPAC registrants.
+        TPAC breakouts sessions are usually open to the public (including remote attendees). Please only select “Restricted” if there is a compelling reason why the session should only be open to TPAC registrants.
       options:
         - Anyone may attend (Default)
         - Restricted to TPAC registrants
