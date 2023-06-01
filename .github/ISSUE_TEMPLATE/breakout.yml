@@ -87,7 +87,7 @@ body:
     attributes:
       label: Room capacity
       description: |
-        Room capacity.
+        Room capacity based on your rough estimate of how many people are likely to show up.
       options:
         - Don't know (Default)
         - Small (fewer than 20 people)
