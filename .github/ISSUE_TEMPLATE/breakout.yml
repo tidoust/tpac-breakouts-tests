@@ -23,7 +23,7 @@ body:
   - type: input
     id: goal
     attributes:
-      label: Main session goal
+      label: Session goal(s)
     validations:
       required: true
 
@@ -87,7 +87,7 @@ body:
     attributes:
       label: Room capacity
       description: |
-        Room capacity.
+        Estimate of in-person attendance.
       options:
         - Don't know (Default)
         - Small (fewer than 20 people)
