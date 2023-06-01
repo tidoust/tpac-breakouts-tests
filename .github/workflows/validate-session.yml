@@ -1,0 +1,35 @@
+name: Validate breakout session issue
+
+on:
+  issues:
+    # Details for types below can be found at:
+    # https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads?actionType=edited#issues
+    types:
+      # Job triggered when an issue is created or re-opened
+      - opened
+      - reopened
+
+      # ... gets "edited" (title or body updated)
+      - edited
+
+      # ... or gets a new label
+      - labeled
+
+jobs:
+  validate-session:
+    name: Validate breakout session
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add issue to TPAC breakout session project
+        uses: actions/add-to-project@v0.5.0
+        with:
+          # We're only interested in "session" issues
+          labeled: session
+
+          # This URL needs to target the annual TPAC XXXX breakout project
+          project-url: https://github.com/users/tidoust/projects/1
+
+          # A valid Personal Access Token (classic version) with project scope
+          # needs to be added as secret to the repo, because the action uses
+          # the GraphQL API under the hoods
+          github-token: ${{ secrets.GRAHQL_TOKEN }}
