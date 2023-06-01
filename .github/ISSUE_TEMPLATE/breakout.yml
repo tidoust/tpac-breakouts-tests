@@ -15,8 +15,17 @@ body:
     attributes:
       label: Session description
       description: |
-        A short description of topic and goals of your breakout session. Simple markdown only please (inline formatting, links, lists).
+        A short description of your breakout session. Simple markdown only please (inline formatting, links, lists).
         Note: Please ensure that the session is [in scope for a TPAC breakout](https://github.com/w3c/tpac-breakouts/wiki/Policies#session-scope).
+    validations:
+      required: true
+
+  - type: input
+    id: goal
+    attributes:
+      label: Session goal
+      description: |
+        Main goal of your breakout session.
     validations:
       required: true
 
@@ -37,6 +46,19 @@ body:
         Shortname for the IRC channel. If not provided, channel name will be generated from the session title.
     validations:
       required: false
+
+  - type: dropdown
+    id: attendance
+    attributes:
+      label: Attendance
+      description: |
+        TPAC breakouts sessions are usually open to the public (including remote attendees). Please only select “Restricted” if there is a compelling
+  reason why the session should only be open to TPAC registrants.
+      options:
+        - Anyone may attend (Default)
+        - Restricted to TPAC registrants
+    validations:
+      required: true
 
   - type: markdown
     attributes:
