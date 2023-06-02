@@ -16,6 +16,15 @@ export async function sendGraphQLRequest(query) {
     },
     body: JSON.stringify({ query }, null, 2)
   });
+  if (res.status !== 200) {
+    if (res.status >= 500) {
+      throw new Error(`GraphQL server error, ${res.status} status received`);
+    }
+    if (res.status === 403) {
+      throw new Error(`GraphQL server reports that the API key is invalid, ${res.status} status received`);
+    }
+    throw new Error(`GraphQL server returned an unexpected HTTP status ${res.status}`);
+  }
   return await res.json();
 }
 

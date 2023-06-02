@@ -29,6 +29,7 @@ import { sendGraphQLRequest } from './graphql.mjs';
  *       "body": "Session body, markdown",
  *       "labels": [ "session", ... ],
  *       "author": {
+ *         "databaseId": 1122927,
  *         "login": "tidoust",
  *         "avatarUrl": "https://avatars.githubusercontent.com/u/1122927?v=4"
  *       },
@@ -42,7 +43,7 @@ import { sendGraphQLRequest } from './graphql.mjs';
  *   ]
  * }
  */
-export async function getProject(login, id, { type } = { type: 'organization' }) {
+export async function fetchProject(login, id, { type } = { type: 'organization' }) {
   // Retrieve information about the list of rooms
   const rooms = await sendGraphQLRequest(`query {
     ${type}(login: "${login}"){
@@ -101,6 +102,9 @@ export async function getProject(login, id, { type } = { type: 'organization' })
                   }
                 }
                 author {
+                  ... on User {
+                    databaseId
+                  }
                   login
                   avatarUrl
                 }
@@ -175,6 +179,7 @@ export async function getProject(login, id, { type } = { type: 'organization' })
         body: session.content.body,
         labels: session.content.labels.nodes.map(label => label.name),
         author: {
+          databaseId: session.content.author.databaseId,
           login: session.content.author.login,
           avatarUrl: session.content.author.avatarUrl
         },
