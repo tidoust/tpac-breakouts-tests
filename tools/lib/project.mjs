@@ -48,8 +48,9 @@ export async function fetchProject(login, id, { type } = { type: 'organization' 
   const rooms = await sendGraphQLRequest(`query {
     ${type}(login: "${login}"){
       projectV2(number: ${id}) {
-        title
         url
+        title
+        shortDescription
         field(name: "Room") {
           ... on ProjectV2SingleSelectField {
             name
@@ -137,6 +138,12 @@ export async function fetchProject(login, id, { type } = { type: 'organization' 
     title: rooms.data[type].projectV2.title,
     url: rooms.data[type].projectV2.url,
 
+    // Project's description should help us extract additional metadata:
+    // - the date of the breakout sessions
+    // - the timezone to use to interpret time slots
+    // - the "big meeting" value to associate calendar entries to TPAC
+    metadata: parseProjectDescription(rooms.data[type].projectV2.shortDescription),
+
     // List of rooms. For each of them, we return the exact name of the option
     // for the "Room" custom field in the project (which should include the
     // room's capacity), the actual name of the room without the capacity, and
@@ -193,4 +200,24 @@ export async function fetchProject(login, id, { type } = { type: 'organization' 
       };
     })
   };
+}
+
+
+/**
+ * Helper function to parse a project description and extract additional
+ * metadata about breakout sessions: date, timezone, big meeting id
+ *
+ * Description needs to be a comma-separated list of parameters. Example:
+ * "meeting: tpac2023, day: 2023-09-13, timezone: Europe/Madrid"
+ */
+function parseProjectDescription(desc) {
+  const metadata = {};
+  if (desc) {
+    desc.split(/,/)
+      .map(param => param.trim())
+      .map(param => param.split(/:/).map(val => val.trim()))
+      .map(param => metadata[param[0]] = param[1]);
+  }
+  // TODO: validate metadata
+  return metadata;
 }
