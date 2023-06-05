@@ -1,3 +1,12 @@
+import { getEnvKey } from './envkeys.mjs';
+
+/**
+ * Internal memory cache to avoid sending the same request more than once
+ * (same author may be associated with multiple sessions!)
+ */
+const cache = {};
+
+
 /**
  * Wrapper function to send an GraphQL request to the GitHub GraphQL endpoint,
  * authenticating using either a token read from the environment (typically
@@ -7,7 +16,10 @@
  * Function throws if the personal access token is missing.
  */
 export async function sendGraphQLRequest(query) {
-  const GRAPHQL_TOKEN = await getAccessToken();  
+  if (cache[query]) {
+    return Object.assign({}, cache[query]);
+  }
+  const GRAPHQL_TOKEN = await getEnvKey('GRAPHQL_TOKEN');
   const res = await fetch('https://api.github.com/graphql', {
     method: 'POST',
     headers: {
@@ -25,27 +37,6 @@ export async function sendGraphQLRequest(query) {
     }
     throw new Error(`GraphQL server returned an unexpected HTTP status ${res.status}`);
   }
-  return await res.json();
-}
-
-
-/**
- * Inner function to retrieve the personal access token from the environment or
- * from the `config.json` file.
- */
-async function getAccessToken() {
-  // Retrieve Personal Access Token from local config file
-  // or from the environment
-  if (process.env.GRAPHQL_TOKEN) {
-    return process.env.GRAPHQL_TOKEN;
-  }
-  try {
-    const { default: env } = await import(
-      '../../config.json',
-      { assert: { type: 'json' } }
-    );
-    return env.GRAPHQL_TOKEN;
-  } catch {
-    throw new Error('No GRAPHQL_TOKEN token found in environment or config file.');
-  }
+  cache[query] = await res.json();
+  return cache[query];
 }

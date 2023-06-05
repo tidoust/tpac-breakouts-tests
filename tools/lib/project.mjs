@@ -1,4 +1,5 @@
 import { sendGraphQLRequest } from './graphql.mjs';
+import { getEnvKey } from './envkeys.mjs';
 
 /**
  * Retrieve available project data.
@@ -43,7 +44,14 @@ import { sendGraphQLRequest } from './graphql.mjs';
  *   ]
  * }
  */
-export async function fetchProject(login, id, { type } = { type: 'organization' }) {
+export async function fetchProject(login, id) {
+  // Login is an organization name... or starts with "user/" to designate
+  // a user project.
+  const type = login.startsWith('user/') ? 'user' : 'organization';
+  if (login.startsWith('user/')) {
+    login = login.substring('user/'.length);
+  }
+
   // Retrieve information about the list of rooms
   const rooms = await sendGraphQLRequest(`query {
     ${type}(login: "${login}"){
@@ -163,7 +171,8 @@ export async function fetchProject(login, id, { type } = { type: 'organization' 
     // for the "Slot" custom field in the project, the start and end times and
     // the duration in minutes.
     slots: slots.data[type].projectV2.field.options.map(slot => {
-      const times = slot.name.match(/^(\d+):(\d+)\s*-\s*(\d+):(\d+)$/);
+      const times = slot.name.match(/^(\d+):(\d+)\s*-\s*(\d+):(\d+)$/) ??
+        [null, '00', '00', '01', '00'];
       return {
         name: slot.name,
         start: `${times[1]}:${times[2]}`,
@@ -218,6 +227,42 @@ function parseProjectDescription(desc) {
       .map(param => param.split(/:/).map(val => val.trim()))
       .map(param => metadata[param[0]] = param[1]);
   }
-  // TODO: validate metadata
   return metadata;
+}
+
+
+/**
+ * Validate that we have the information we need about the project.
+ */
+export function validateProject(project) {
+  const errors = [];
+
+  if (!project.metadata) {
+    errors.push('The short description is missing. It should set the meeting, date, and timezone.');
+  }
+  else {
+    if (!project.metadata.meeting) {
+      errors.push('The "meeting" info in the short description is missing. Should be something like "meeting: tpac2023"');
+    }
+    if (!project.metadata.date) {
+      errors.push('The "date" info in the short description is missing. Should be something like "date: 2023-09-13"');
+    }
+    else if (!project.metadata.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      errors.push('The "date" info in the short description must follow the YYYY-MM-DD format');
+    }
+    if (!project.metadata.timezone) {
+      errors.push('The "timezone" info in the short description is missing. Should be something like "timezone: Europe/Madrid"');
+    }
+  }
+
+  for (const slot of project.slots) {
+    if (!slot.name.match(/^(\d+):(\d+)\s*-\s*(\d+):(\d+)$/)) {
+      errors.push(`Invalid slot name "${slot.name}". Format should be "HH:mm - HH:mm"`);
+    }
+    if (slot.duration !== 30 && slot.duration !== 60) {
+      errors.push(`Unexpected slot duration ${slot.duration}. Duration should be 30 or 60 minutes.`);
+    }
+  }
+
+  return errors;
 }

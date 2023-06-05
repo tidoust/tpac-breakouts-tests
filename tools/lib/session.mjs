@@ -21,9 +21,13 @@ let sectionHandlers = null;
  * Populate the list of section handlers from the info in `session.yml`.
  *
  * The function needs to be called once before `parseSessionBody` or
- * `validateSessionBody` may be called.
+ * `validateSessionBody` may be called (function returns immediately on
+ * further calls).
  */
 export async function initSectionHandlers() {
+  if (sectionHandlers) {
+    return;
+  }
   const yamlTemplate = await readFile(
     path.join(__dirname, '..', '..', '.github', 'ISSUE_TEMPLATE', 'session.yml'),
     'utf8');
@@ -181,7 +185,8 @@ export function validateSessionBody(body) {
   if (!sectionHandlers) {
     throw new Error('Need to call `initSectionHandlers` first!');
   }
-  return splitIntoSections(body)
+  const sections = splitIntoSections(body);
+  const errors = sections
     .map(section => {
       const sectionHandler = sectionHandlers.find(handler =>
         handler.title === section.title);
@@ -197,6 +202,15 @@ export function validateSessionBody(body) {
       return null;
     })
     .filter(error => !!error);
+
+  // Also report required sections that are missing
+  for (const handler of sectionHandlers) {
+    if (handler.required && !sections.find(s => s.title === handler.title)) {
+      errors.push(`Missing required section "${handler.title}"`);
+    }
+  }
+
+  return errors;
 }
 
 

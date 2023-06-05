@@ -1,3 +1,6 @@
+import { getEnvKey } from './envkeys.mjs';
+
+
 /**
  * Internal memory cache to avoid sending the same request more than once
  * (same author may be associated with multiple sessions!)
@@ -18,7 +21,7 @@ export async function fetchW3CAccount(databaseId) {
     return Object.assign({}, cache[databaseId]);
   }
 
-  const W3C_API_KEY = await getAccessToken();
+  const W3C_API_KEY = await getEnvKey('W3C_API_KEY');
   const res = await fetch(
     `https://api.w3.org/users/connected/github/${databaseId}`,
     {
@@ -50,26 +53,4 @@ export async function fetchW3CAccount(databaseId) {
   };
   cache[databaseId] = user;
   return user;
-}
-
-
-/**
- * Inner function to retrieve the W3C API token from the environment or
- * from a `config.json` file.
- */
-async function getAccessToken() {
-  // Retrieve Personal Access Token from local config file
-  // or from the environment
-  if (process.env.W3C_API_KEY) {
-    return process.env.W3C_API_KEY;
-  }
-  try {
-    const { default: env } = await import(
-      '../../config.json',
-      { assert: { type: 'json' } }
-    );
-    return env.W3C_API_KEY;
-  } catch {
-    throw new Error('No W3C_API_KEY token found in environment or config file.');
-  }
 }
