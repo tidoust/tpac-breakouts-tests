@@ -17,8 +17,8 @@ import YAML from 'yaml';
  * The function may throw in unexpected ways if provided session object has not
  * yet been validated.
  */
-export function sessionToCalendarEntry({ session, project }) {
-  if (!session?.slot) {
+export function sessionToCalendarEntry(session, project) {
+  if (!session.slot) {
     return null;
   }
 
@@ -26,7 +26,7 @@ export function sessionToCalendarEntry({ session, project }) {
     general: {
       title: session.title,
       description: formatDescription(session),
-      location: session.room ? project.rooms[session.room].name : undefined,
+      location: session.room ? session.room : undefined,
       big_meeting: project.metadata.meeting,
       category: 'breakout-sessions',
       status: 'confirmed',
@@ -35,8 +35,8 @@ export function sessionToCalendarEntry({ session, project }) {
       // TODO: Turn main TPAC breakout organizer ID into a proper parameter
       author: 41989,
       dates: {
-        start: `${project.metadata.date} ${project.slots[session.slot].start}`,
-        end: `${project.metadata.date} ${project.slots[session.slot].end}`,
+        start: `${project.metadata.date} ${project.slots.find(s => s.name === session.slot).start}`,
+        end: `${project.metadata.date} ${project.slots.find(s => s.name === session.slot).end}`,
         timezone: project.metadata.timezone
       },
       participants: {
@@ -49,11 +49,11 @@ export function sessionToCalendarEntry({ session, project }) {
         visibility: session.description.attendance === 'restricted' ?
           'registered' : 'public',
         // TODO: Initialize Zoom info somewhere!
-        url: project.rooms[session.room].zoom,
+        url: session.room ? project.rooms.find(r => r.name === session.room).zoom : undefined,
         chat: `https://irc.w3.org/?channels=%23${session.description.shortname}`
       },
       agenda: {
-        url: session.description.materials.agenda
+        url: session.description.materials.Agenda
       }
     }
   });
@@ -66,7 +66,7 @@ export function sessionToCalendarEntry({ session, project }) {
 function formatDescription(session) {
   let materials = '';
   if (session.description.materials) {
-    for (const (key, value) of Object.entries(session.description.materials)) {
+    for (const [key, value] of Object.entries(session.description.materials)) {
       if ((key !== 'Agenda') && (key !== 'Calendar')) {
         materials += `- ${key}: ${value}\n`;
       }
