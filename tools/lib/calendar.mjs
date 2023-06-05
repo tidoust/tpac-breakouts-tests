@@ -22,7 +22,7 @@ export function sessionToCalendarEntry(session, project) {
     return null;
   }
 
-  return YAML.stringify({
+  const entry = {
     general: {
       title: session.title,
       description: formatDescription(session),
@@ -33,30 +33,36 @@ export function sessionToCalendarEntry(session, project) {
       visibility: session.description.attendance === 'restricted' ?
         'member' : 'public',
       // TODO: Turn main TPAC breakout organizer ID into a proper parameter
-      author: 41989,
-      dates: {
-        start: `${project.metadata.date} ${project.slots.find(s => s.name === session.slot).start}`,
-        end: `${project.metadata.date} ${project.slots.find(s => s.name === session.slot).end}`,
-        timezone: project.metadata.timezone
-      },
-      participants: {
-        organizers: [session.chairs[0].w3cId],
-        individuals: (session.chairs.length > 1) ?
-          session.chairs.slice(1).map(p => p.w3cId) :
-          undefined
-      },
-      joining: {
-        visibility: session.description.attendance === 'restricted' ?
-          'registered' : 'public',
-        // TODO: Initialize Zoom info somewhere!
-        url: session.room ? project.rooms.find(r => r.name === session.room).zoom : undefined,
-        chat: `https://irc.w3.org/?channels=%23${session.description.shortname}`
-      },
-      agenda: {
-        url: session.description.materials.Agenda
-      }
+      author: 41989
+    },
+    dates: {
+      start: `${project.metadata.date} ${project.slots.find(s => s.name === session.slot).start}`,
+      end: `${project.metadata.date} ${project.slots.find(s => s.name === session.slot).end}`,
+      timezone: project.metadata.timezone
+    },
+    participants: {
+      organizers: [session.chairs[0].w3cId],
+      individuals: (session.chairs.length > 1) ?
+        session.chairs.slice(1).map(p => p.w3cId) :
+        undefined
+    },
+    joining: {
+      visibility: session.description.attendance === 'restricted' ?
+        'registered' : 'public',
+      // TODO: Initialize Zoom info somewhere!
+      url: session.room ? project.rooms.find(r => r.name === session.room).zoom : undefined,
+      chat: `https://irc.w3.org/?channels=%23${session.description.shortname}`
+    },
+    agenda: {
+      url: session.description.materials.Agenda
     }
-  });
+  };
+  if (session.materials.Minutes) {
+    entry.minutes = {
+      url: session.materials.Minutes
+    };
+  }
+  return YAML.stringify(entry);
 }
 
 
