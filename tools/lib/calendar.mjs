@@ -22,7 +22,12 @@ export function sessionToCalendarEntry(session, project) {
     return null;
   }
 
+  const calendarUrl = session.materials.Calendar ?? undefined;
+
   const entry = {
+    uuid: calendarUrl ?
+      calendarUrl.substring(calendarUrl.lastIndexOf('/')) :
+      undefined,
     general: {
       title: session.title,
       description: formatDescription(session),
