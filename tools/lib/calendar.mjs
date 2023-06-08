@@ -59,12 +59,12 @@ export function sessionToCalendarEntry(session, project) {
       chat: `https://irc.w3.org/?channels=%23${session.description.shortname}`
     },
     agenda: {
-      url: session.description.materials.Agenda
+      url: session.description.materials.agenda
     }
   };
-  if (session.description.materials.Minutes) {
+  if (session.description.materials.minutes) {
     entry.minutes = {
-      url: session.description.materials.Minutes
+      url: session.description.materials.minutes
     };
   }
   return YAML.stringify(entry);

@@ -124,20 +124,24 @@ export async function initSectionHandlers() {
           value.split('\n')
             .map(line => line.trim())
             .filter(line => !!line)
-            .map(line => line.match(/^-\s+(Agenda|Slides|Minutes|Calendar):\s*(.*)$/))
-            .forEach(match => materials[match[1]] = match[2]);
+            .map(line =>
+              line.match(/^-\s+(Agenda|Slides|Minutes|Calendar):\s*(.*)$/i) ??
+              line.match(/^-\s+\[(Agenda|Slides|Minutes|Calendar)\]\((.*)\)$/i))
+            .forEach(match => materials[match[1].toLowerCase()] = match[2]);
           return materials;
         };
         handler.validate = value => {
           const matches = value.split('\n')
             .map(line => line.trim())
             .filter(line => !!line)
-            .map(line => line.match(/^-\s+(Agenda|Slides|Minutes|Calendar):\s*(.*)$/));
+            .map(line =>
+              line.match(/^-\s+(Agenda|Slides|Minutes|Calendar):\s*(.*)$/i) ||
+              line.match(/^-\s+\[(Agenda|Slides|Minutes|Calendar)\]\((.*)\)$/i));
           return matches.every(match => {
             if (!match) {
               return false;
             }
-            if (!['@@', 'TDB', 'TODO'].includes(match[2])) {
+            if (!['@', '@@', '@@@', 'TDB', 'TODO'].includes(match[2].toUpperCase())) {
               try {
                 new URL(match[2]);
                 return true;
