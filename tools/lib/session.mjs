@@ -111,9 +111,9 @@ export async function initSectionHandlers() {
         handler.parse = value => {
           switch (value) {
           case 'Don\'t know (Default)': return 0;
-          case 'Small (fewer than 20 people)': return 15;
-          case 'Large (20-45 people)': return 30;
-          case 'Really quite large (more than 45 people)': return 50;
+          case 'Fewer than 20 people': return 15;
+          case '20-45 people': return 30;
+          case 'More than 45 people': return 50;
           };
         };
         break;

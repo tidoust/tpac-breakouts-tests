@@ -2,13 +2,16 @@ name: Session proposal
 description: Propose to chair a breakout session at TPAC
 labels: ["session"]
 body:
+# This repo includes code that validates instances of the data below. 
+# The validation code parses this file and uses "id" for some aspects of validation. 
+# One implication is that labels below can be changed without disrupting some of the validation code.
+# However, the validation code in some cases also matches on values of "options" below, so if those change,
+# you will need to change the validation code as well.
 
   - type: markdown
     attributes:
       value: |
-        Thank you for proposing to chair a TPAC breakout session.
-        Please review the [good practices for session chairs](https://github.com/w3c/tpac-breakouts/wiki/Good-Practices-for-Session-Chairs).
-        Use issue comments for discussion of the session. Please avoid editing the markdown directly except to add links to materials as described below.
+        Thank you for proposing to chair a TPAC breakout session. Please ensure that the session is [in scope for a TPAC breakout](https://github.com/w3c/tpac-breakouts/wiki/Policies#session-scope) and review the [good practices for session chairs](https://github.com/w3c/tpac-breakouts/wiki/Good-Practices-for-Session-Chairs), which includes information about [how you can later update your session](https://github.com/w3c/tpac-breakouts/wiki/Good-Practices-for-Session-Chairs#how-to-update-a-session).
 
   - type: textarea
     id: description
@@ -16,14 +19,13 @@ body:
       label: Session description
       description: |
         Simple markdown only please (inline formatting, links, lists).
-        Note: Please ensure that the session is [in scope for a TPAC breakout](https://github.com/w3c/tpac-breakouts/wiki/Policies#session-scope).
     validations:
       required: true
 
   - type: input
     id: goal
     attributes:
-      label: Session goal(s)
+      label: Session goal
     validations:
       required: true
 
@@ -32,7 +34,7 @@ body:
     attributes:
       label: Additional session chairs (Optional)
       description: |
-        GitHub identities of additional session chairs other than you. Space- or comma-separated list.
+        GitHub identities of additional session chairs other than you (e.g., `@tidoust, @ianbjacobs`). Space- or comma-separated list.
     validations:
       required: false
 
@@ -41,14 +43,14 @@ body:
     attributes:
       label: IRC channel (Optional)
       description: |
-        Shortname for the IRC channel. If not provided, channel name will be generated from the session title.
+        Shortname for the irc.w3.org channel (e.g., `my-fav-session`)
     validations:
       required: false
 
   - type: dropdown
     id: attendance
     attributes:
-      label: Attendance
+      label: Who can attend
       description: |
         TPAC breakouts sessions are usually open to the public (including remote attendees). Please only select “Restricted” if there is a compelling reason why the session should only be open to TPAC registrants.
       options:
@@ -75,24 +77,21 @@ body:
   - type: textarea
     id: conflicts
     attributes:
-      label: Scheduling conflicts (Optional)
+      label: Other sessions where we should avoid scheduling conflicts (Optional)
       description: |
-        Please list any sessions for which you have a strong preference to avoid a scheduling conflict.
-        Space- or comma-separated list of sessions identified by issue numbers in this GitHub repo (e.g., `#32 #18`).
+        Identify sessions by their issue number in this GitHub repo (e.g., `#32, #18`). Space- or comma-separated list.
     validations:
       required: false
 
   - type: dropdown
     id: capacity
     attributes:
-      label: Room capacity
-      description: |
-        Estimate of in-person attendance.
+      label: Estimated number of in-person attendees
       options:
         - Don't know (Default)
-        - Small (fewer than 20 people)
-        - Large (20-45 people)
-        - Really quite large (more than 45 people)
+        - Fewer than 20 people
+        - 20-45 people
+        - More than 45 people
     validations:
       required: true
 
