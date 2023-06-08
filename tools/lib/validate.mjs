@@ -104,6 +104,23 @@ ${projectErrors.map(error => '- ' + error).join('\n')}`);
     }
   }
 
+  // Make sure there is no session scheduled at the same time in the same room
+  const scheduled = session.room && session.slot;
+  if (scheduled) {
+    const schedulingErrors = project.sessions
+      .filter(s => s !== session && s.room && s.slot)
+      .filter(s => s.room === session.room && s.slot === session.slot)
+      .map(s => `Session scheduled in same room (${s.room}) and same slot (${s.slot}) as session "${s.title}" (${s.number})`);
+    if (schedulingErrors.length > 0) {
+      errors.push({
+        session: sessionNumber,
+        severity: 'error',
+        type: 'scheduling',
+        messages: schedulingErrors
+      });
+    }
+  }
+
   // Check assigned room matches requested capacity
   if (session.room && session.description.capacity) {
     const room = project.rooms[session.room];
@@ -162,6 +179,52 @@ ${projectErrors.map(error => '- ' + error).join('\n')}`);
         messages: trackWarnings
       });
     }
+  }
+
+  // Check presence of comments
+  if (session.description.comments) {
+    errors.push({
+      session: sessionNumber,
+      severity: 'check',
+      type: 'comments',
+      messages: ['Session contains comments']
+    });
+  }
+
+  function isMaterialMissing(name) {
+    return !session.description.materials[name] ||
+      ['@', '@@', '@@@', 'TBD', 'TODO'].includes(session.description.materials[name].toUpperCase());
+  }
+
+  // If breakout session takes place in less than 2 days (or past),
+  // time to add a link to an agenda
+  const twoDaysInMs = 48 * 60 * 60 * 1000;
+  const inLessThanTwoDays = (
+      (new Date(project.metadata.date)).getTime() -
+      (new Date()).getTime()
+    ) < twoDaysInMs;
+  if (scheduled && isMaterialMissing('agenda') && inLessThanTwoDays) {
+    errors.push({
+      session: sessionNumber,
+      severity: 'warning',
+      type: 'agenda',
+      messages: ['Session needs a link to an agenda']
+    });
+  }
+
+  // If breakout session took place more than 2 days ago,
+  // time to add a link to the minutes
+  const atLeastTwoDaysOld = (
+      (new Date()).getTime() -
+      (new Date(project.metadata.date)).getTime()
+    ) > twoDaysInMs;
+  if (scheduled && isMaterialMissing('minutes') && atLeastTwoDaysOld) {
+    errors.push({
+      session: sessionNumber,
+      severity: 'warning',
+      type: 'minutes',
+      messages: ['Session needs a link to the minutes']
+    });
   }
 
   return errors;
