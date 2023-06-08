@@ -73,9 +73,6 @@ body:
         - 30 minutes
     validations:
       required: true
-    values:
-      - 60
-      - 30
 
   - type: textarea
     id: conflicts
