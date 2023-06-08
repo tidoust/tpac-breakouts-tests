@@ -22,7 +22,7 @@ export function sessionToCalendarEntry(session, project) {
     return null;
   }
 
-  const calendarUrl = session.materials.Calendar ?? undefined;
+  const calendarUrl = session.description.materials.Calendar ?? undefined;
 
   const entry = {
     uuid: calendarUrl ?
@@ -62,9 +62,9 @@ export function sessionToCalendarEntry(session, project) {
       url: session.description.materials.Agenda
     }
   };
-  if (session.materials.Minutes) {
+  if (session.description.materials.Minutes) {
     entry.minutes = {
-      url: session.materials.Minutes
+      url: session.description.materials.Minutes
     };
   }
   return YAML.stringify(entry);
