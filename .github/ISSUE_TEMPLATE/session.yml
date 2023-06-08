@@ -71,6 +71,9 @@ body:
       options:
         - 60 minutes (Default)
         - 30 minutes
+      values:
+        - 60
+        - 30
     validations:
       required: true
 
