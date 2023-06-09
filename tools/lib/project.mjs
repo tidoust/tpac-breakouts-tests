@@ -41,6 +41,13 @@ import { getEnvKey } from './envkeys.mjs';
  *       "slot": "9:30 - 10:30"
  *     },
  *     ...
+ *   ],
+ *   "labels": [
+ *     {
+ *       "id": "xxxxxxx",
+ *       "name": "error: format"
+ *     },
+ *     ...
  *   ]
  * }
  */
@@ -100,7 +107,12 @@ export async function fetchProject(login, id) {
           nodes {
             content {
               ... on Issue {
+                id
                 repository {
+                  owner {
+                    login
+                  }
+                  name
                   nameWithOwner
                 }
                 number
@@ -137,6 +149,18 @@ export async function fetchProject(login, id) {
               }
             }
           }
+        }
+      }
+    }
+  }`);
+
+  const repository = sessions.data[type].projectV2.items.nodes[0].content.repository;
+  const labels = await sendGraphQLRequest(`query {
+    repository(owner: "${repository.owner.login}", name: "${repository.name}") {
+      labels(first: 50) {
+        nodes {
+          id
+          name
         }
       }
     }
@@ -193,6 +217,7 @@ export async function fetchProject(login, id) {
       .filter(session => session.content.state === 'OPEN')
       .map(session => {
         return {
+          id: session.content.id,
           repository: session.content.repository.nameWithOwner,
           number: session.content.number,
           title: session.content.title,
@@ -211,7 +236,11 @@ export async function fetchProject(login, id) {
           slot: session.fieldValues.nodes
             .find(value => value.field?.name === 'Slot')?.name,
         };
-      })
+      }),
+
+      // Labels defined in the associated repository
+      // (note all sessions should belong to the same repository!)
+      labels: labels.data.repository.labels.nodes
   };
 }
 
