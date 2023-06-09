@@ -32,7 +32,7 @@ jobs:
           # the repository. PROJECT_OWNER_TYPE needs to be set to "user" if
           # project belongs to a user. It may be omitted otherwise (or set to
           # 'org"').
-          project-url: https://github.com/${{vars.PROJECT_OWNER_TYPE || 'org'}}s/${{vars.PROJECT_OWNER}}/${{vars.PROJECT_NUMBER}}
+          project-url: https://github.com/${{vars.PROJECT_OWNER_TYPE || 'org'}}s/${{vars.PROJECT_OWNER}}/projects/${{vars.PROJECT_NUMBER}}
 
           # A valid Personal Access Token (classic version) with project scope
           # needs to be added as secret to the repo, because the action uses
