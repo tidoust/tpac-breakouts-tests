@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add issue to TPAC breakout session project
-        if: ${{ github.event_name == 'opened' || github.event_name == 'reopened' }}
+        if: ${{ github.event.action == 'opened' || github.event.action == 'reopened' }}
         uses: actions/add-to-project@v0.5.0
         with:
           # We're only interested in "session" issues.
