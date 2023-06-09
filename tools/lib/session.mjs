@@ -141,7 +141,7 @@ export async function initSectionHandlers() {
             if (!match) {
               return false;
             }
-            if (!['@', '@@', '@@@', 'TDB', 'TODO'].includes(match[2].toUpperCase())) {
+            if (!['@', '@@', '@@@', 'TBD', 'TODO'].includes(match[2].toUpperCase())) {
               try {
                 new URL(match[2]);
                 return true;
