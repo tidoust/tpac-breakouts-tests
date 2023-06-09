@@ -47,10 +47,11 @@ import { getEnvKey } from './envkeys.mjs';
 export async function fetchProject(login, id) {
   // Login is an organization name... or starts with "user/" to designate
   // a user project.
-  const type = login.startsWith('user/') ? 'user' : 'organization';
-  if (login.startsWith('user/')) {
-    login = login.substring('user/'.length);
-  }
+  const tokens = login.split('/');
+  const type = (tokens.length === 2) && tokens[0] === 'user' ?
+    'user' :
+    'organization';
+  login = (tokens.length === 2) ? tokens[1] : login;
 
   // Retrieve information about the list of rooms
   const rooms = await sendGraphQLRequest(`query {
@@ -189,7 +190,7 @@ export async function fetchProject(login, id) {
     // return detailed information, including its title, full body, author,
     // labels, and the room and slot that may already have been assigned.
     sessions: sessions.data[type].projectV2.items.nodes
-      .filter(session => session.state === 'OPEN')
+      .filter(session => session.content.state === 'OPEN')
       .map(session => {
         return {
           repository: session.content.repository.nameWithOwner,
