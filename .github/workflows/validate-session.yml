@@ -21,15 +21,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add issue to TPAC breakout session project
+        if: ${{ github.event_name == 'opened' || github.event_name == 'reopened' }}
         uses: actions/add-to-project@v0.5.0
         with:
-          # We're only interested in "session" issues
+          # We're only interested in "session" issues.
           labeled: session
 
-          # This URL needs to target the annual TPAC XXXX breakout project
-          project-url: https://github.com/users/tidoust/projects/1
+          # URL of the annual TPAC XXXX breakout project.
+          # The PROJECT_OWNER and PROJECT_NUMBER variables must be defined on
+          # the repository. PROJECT_OWNER_TYPE needs to be set to "user" if
+          # project belongs to a user. It may be omitted otherwise (or set to
+          # 'org"').
+          project-url: https://github.com/${{vars.PROJECT_OWNER_TYPE || 'org'}}s/${{vars.PROJECT_OWNER}}/${{vars.PROJECT_NUMBER}}
 
           # A valid Personal Access Token (classic version) with project scope
           # needs to be added as secret to the repo, because the action uses
-          # the GraphQL API under the hoods
+          # the GraphQL API under the hoods.
           github-token: ${{ secrets.GRAPHQL_TOKEN }}
