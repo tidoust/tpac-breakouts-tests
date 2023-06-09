@@ -103,6 +103,7 @@ export async function fetchProject(login, id) {
                   nameWithOwner
                 }
                 number
+                state
                 title
                 body
                 labels(first: 20) {
@@ -183,31 +184,33 @@ export async function fetchProject(login, id) {
       };
     }),
 
-    // List of sessions linked to the project (in other words, all of the issues
-    // that have been associated with the project). For each session, we return
-    // detailed information, including its title, full body, author, labels,
-    // and the room and slot that may already have been assigned.
-    sessions: sessions.data[type].projectV2.items.nodes.map(session => {
-      return {
-        repository: session.content.repository.nameWithOwner,
-        number: session.content.number,
-        title: session.content.title,
-        body: session.content.body,
-        labels: session.content.labels.nodes.map(label => label.name),
-        author: {
-          databaseId: session.content.author.databaseId,
-          login: session.content.author.login,
-          avatarUrl: session.content.author.avatarUrl
-        },
-        createdAt: session.content.createdAt,
-        updatedAt: session.content.updatedAt,
-        lastEditedAt: session.content.lastEditedAt,
-        room: session.fieldValues.nodes
-          .find(value => value.field?.name === 'Room')?.name,
-        slot: session.fieldValues.nodes
-          .find(value => value.field?.name === 'Slot')?.name,
-      };
-    })
+    // List of open sessions linked to the project (in other words, all of the
+    // issues that have been associated with the project). For each session, we
+    // return detailed information, including its title, full body, author,
+    // labels, and the room and slot that may already have been assigned.
+    sessions: sessions.data[type].projectV2.items.nodes
+      .filter(session => session.state === 'OPEN')
+      .map(session => {
+        return {
+          repository: session.content.repository.nameWithOwner,
+          number: session.content.number,
+          title: session.content.title,
+          body: session.content.body,
+          labels: session.content.labels.nodes.map(label => label.name),
+          author: {
+            databaseId: session.content.author.databaseId,
+            login: session.content.author.login,
+            avatarUrl: session.content.author.avatarUrl
+          },
+          createdAt: session.content.createdAt,
+          updatedAt: session.content.updatedAt,
+          lastEditedAt: session.content.lastEditedAt,
+          room: session.fieldValues.nodes
+            .find(value => value.field?.name === 'Room')?.name,
+          slot: session.fieldValues.nodes
+            .find(value => value.field?.name === 'Slot')?.name,
+        };
+      })
   };
 }
 
