@@ -3,7 +3,7 @@
  *
  * To run the tool:
  *
- *  node tools/update-session-labels.mjs [sessionNumber] [changes]
+ *  node tools/validate-session.mjs [sessionNumber] [changes]
  *
  * where [sessionNumber] is the number of the issue to validate (e.g. 15)
  * and [changes] is the filename of a JSON file that describes changes made to
@@ -22,10 +22,10 @@
 import { getEnvKey } from './lib/envkeys.mjs';
 import { fetchProject } from './lib/project.mjs'
 import { validateSession } from './lib/validate.mjs';
-import { parseSessionBody } from './lib/session.mjs';
+import { parseSessionBody, updateSessionLabels } from './lib/session.mjs';
 import { sendGraphQLRequest } from './lib/graphql.mjs';
 
-async function updateSessionLabels(sessionNumber, changesFile) {
+async function main(sessionNumber, changesFile) {
   // First, retrieve known information about the project and the session
   const PROJECT_OWNER = await getEnvKey('PROJECT_OWNER');
   const PROJECT_NUMBER = await getEnvKey('PROJECT_NUMBER');
@@ -103,69 +103,10 @@ async function updateSessionLabels(sessionNumber, changesFile) {
   // All labels that are not checks, warnings, or errors are preserved.
   console.log();
   console.log(`Update labels on session...`);
-  const sessionLabels = session.labels
-    .filter(s =>
-      s.startsWith('check: ') ||
-      s.startsWith('warning: ') ||
-      s.startsWith('error: '))
-    .sort();
   const newLabels = report
     .map(error => `${error.severity}: ${error.type}`)
     .sort();
-  console.log(`- session should have ${['session'].concat(newLabels).join(', ')}`);
-  console.log(`- session already has ${['session'].concat(sessionLabels).join(', ')}`);
-
-  const labelsToAdd = newLabels
-    .filter(label => !sessionLabels.includes(label))
-    .map(label => project.labels.find(l => l.name === label).id);
-  if (labelsToAdd.length > 0) {
-    console.log(`- add label ids ${labelsToAdd.join(', ')}`);
-    const res = await sendGraphQLRequest(`mutation {
-      addLabelsToLabelable(input: {
-        labelableId: "${session.id}",
-        labelIds: ${JSON.stringify(labelsToAdd)}
-      }) {
-        labelable {
-          ...on Issue {
-            id
-          }
-        }
-      }
-    }`);
-    if (!res?.data?.addLabelsToLabelable?.labelable?.id) {
-      console.log(JSON.stringify(res, null, 2));
-      throw new Error(`GraphQL error, could not add labels`);
-    }
-  }
-  else {
-    console.log(`- no label to add`);
-  }
-
-  const labelsToRemove = sessionLabels
-    .filter(label => label !== 'session' && !newLabels.includes(label))
-    .map(label => project.labels.find(l => l.name === label).id);
-  if (labelsToRemove.length > 0) {
-    console.log(`- remove label ids ${labelsToRemove.join(', ')}`);
-    const res = await sendGraphQLRequest(`mutation {
-      removeLabelsFromLabelable(input: {
-        labelableId: "${session.id}",
-        labelIds: ${JSON.stringify(labelsToRemove)}
-      }) {
-        labelable {
-          ...on Issue {
-            id
-          }
-        }
-      }
-    }`);
-    if (!res?.data?.removeLabelsFromLabelable?.labelable?.id) {
-      console.log(JSON.stringify(res, null, 2));
-      throw new Error(`GraphQL error, could not remove labels`);
-    }
-  }
-  else {
-    console.log(`- no label to remove`);
-  }
+  await updateSessionLabels(session, project, newLabels);
   console.log(`Update labels on session... done`);
 }
 
@@ -180,7 +121,7 @@ const sessionNumber = parseInt(process.argv[2], 10);
 // Read change filename from command-line if specified
 const changes = process.argv[3];
 
-updateSessionLabels(sessionNumber, changes)
+main(sessionNumber, changes)
   .catch(err => {
     console.log(`Something went wrong: ${err.message}`);
     throw err;

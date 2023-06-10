@@ -128,7 +128,8 @@ ${projectErrors.map(error => '- ' + error).join('\n')}`);
       errors.push({
         session: sessionNumber,
         severity: 'warning',
-        type: 'capacity'
+        type: 'capacity',
+        messages: ['Room capacity is lower than requested capacity']
       });
     }
   }
