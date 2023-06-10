@@ -54,7 +54,7 @@ jobs:
           github-token: ${{ secrets.GRAPHQL_TOKEN }}
 
       - name: Dump changes to local file
-        run: echo '${{ toJSON(github.event.issue.changes || "") }}' > changes.json
+        run: echo '${{ toJSON(github.event.issue.changes || '{}') }}' > changes.json
         shell: bash
 
       - name: Validate session and update issue labels accordingly
