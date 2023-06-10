@@ -17,7 +17,7 @@ jobs:
     name: Validate breakout session
     runs-on: ubuntu-latest
     # We're only interested in "session" issues
-    if: ${{ contains(github.event.issue.labels.*.name, 'session' }}
+    if: ${{ contains(github.event.issue.labels.*.name, 'session') }}
     steps:
       - name: Setup node.js
         uses: actions/setup-node@v2
