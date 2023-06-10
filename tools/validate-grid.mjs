@@ -6,10 +6,10 @@
  *
  * To run the tool:
  *
- *  node tools/validate-grid.mjs [all]
+ *  node tools/validate-grid.mjs [validation]
  *
- * ... set all to "all" (or anything else, really) to have the tool re-validate
- * all sessions.
+ * where [validation] is either "scheduling" (default) to validate only
+ * scheduling conflicts or "everything" to re-validate all sessions.
  */
 
 import { getEnvKey } from './lib/envkeys.mjs';
@@ -26,7 +26,7 @@ const schedulingErrors = [
  'warning: track'
 ];
 
-async function main(all) {
+async function main(validation) {
   // First, retrieve known information about the project and the session
   const PROJECT_OWNER = await getEnvKey('PROJECT_OWNER');
   const PROJECT_NUMBER = await getEnvKey('PROJECT_NUMBER');
@@ -45,7 +45,7 @@ async function main(all) {
   console.log();
   console.log(`Validate grid...`);
   const errors = (await validateGrid(project))
-    .filter(error => all || schedulingErrors.includes(`${error.severity}: ${error.type}`));
+    .filter(error => validation === 'everything' || schedulingErrors.includes(`${error.severity}: ${error.type}`));
   console.log(`- ${errors.length} problems found`);
   console.log(`Validate grid... done`);
 
@@ -65,7 +65,7 @@ async function main(all) {
 }
 
 
-main(!!process.argv[2])
+main(process.argv[2] ?? 'scheduling')
   .catch(err => {
     console.log(`Something went wrong: ${err.message}`);
     throw err;
