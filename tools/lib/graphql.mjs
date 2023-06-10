@@ -15,7 +15,7 @@ const cache = {};
  *
  * Function throws if the personal access token is missing.
  */
-export async function sendGraphQLRequest(query) {
+export async function sendGraphQLRequest(query, acceptHeader = '') {
   if (cache[query]) {
     return Object.assign({}, cache[query]);
   }
@@ -25,6 +25,7 @@ export async function sendGraphQLRequest(query) {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `bearer ${GRAPHQL_TOKEN}`,
+      'Accept': acceptHeader ?? undefined
     },
     body: JSON.stringify({ query }, null, 2)
   });
