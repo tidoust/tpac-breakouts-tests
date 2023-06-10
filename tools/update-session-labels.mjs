@@ -183,5 +183,5 @@ const changes = process.argv[3];
 updateSessionLabels(sessionNumber, changes)
   .catch(err => {
     console.log(`Something's wrong: ${err.message}`);
-    process.exit(2);
+    throw err;
   });
