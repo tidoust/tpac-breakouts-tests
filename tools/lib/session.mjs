@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import * as YAML from 'yaml';
 import { fileURLToPath } from 'url';
+import { sendGraphQLRequest } from './graphql.mjs';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 
