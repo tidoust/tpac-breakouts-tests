@@ -69,14 +69,13 @@ export async function initSectionHandlers() {
         handler.parse = value => value.split(/[\s,]/)
           .map(nick => nick.trim())
           .filter(nick => !!nick)
-          .map(nick => nick.substring(1));
+          .map(nick => nick.startsWith('@') ? nick.substring(1) : nick);
         handler.validate = value => {
           const chairs = value
             .split(/[\s,]/)
             .map(nick => nick.trim())
             .filter(nick => !!nick);
-          return chairs.every(nick => nick.startsWith('@') &&
-            nick.match(/^[A-Za-z0-9][A-Za-z0-9\-]+$/));
+          return chairs.every(nick => nick.match(/^@?[A-Za-z0-9][A-Za-z0-9\-]+$/));
         }
         break;
 
