@@ -23,7 +23,7 @@ export async function getEnvKey(key, defaultValue) {
   catch {
   }
   finally {
-    if (Object.hasOwn(config, key)) {
+    if (config && Object.hasOwn(config, key)) {
       return config[key];
     }
     else if (defaultValue !== undefined) {
