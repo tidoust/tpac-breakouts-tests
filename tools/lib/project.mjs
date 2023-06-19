@@ -275,7 +275,7 @@ export function validateProject(project) {
   }
   else {
     if (!project.metadata.meeting) {
-      errors.push('The "meeting" info in the short description is missing. Should be something like "meeting: tpac2023"');
+      errors.push('The "meeting" info in the short description is missing. Should be something like "meeting: TPAC 2023"');
     }
     if (!project.metadata.date) {
       errors.push('The "date" info in the short description is missing. Should be something like "date: 2023-09-13"');

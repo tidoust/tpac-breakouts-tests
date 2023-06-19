@@ -2,29 +2,27 @@ import puppeteer from 'puppeteer';
 import { getEnvKey } from './lib/envkeys.mjs';
 import { fetchProject } from './lib/project.mjs';
 import { validateSession } from './lib/validate.mjs';
+import { todoStrings } from './lib/todoStrings.mjs';
 
 /**
  * Helper function to format calendar entry description from the session's info
  */
 function formatDescription(session) {
-  let materials = '';
-  if (session.description.materials) {
-    for (const [key, value] of Object.entries(session.description.materials)) {
-      if ((key !== 'agenda') && (key !== 'calendar')) {
-        materials += `- ${key}: ${value}\n`;
-      }
-    }
-  }
-  if (materials) {
-    materials = `## Materials\n${materials}`;
-  }
+  const issueUrl = `https://github.com/${session.repository}/issues/${session.number}`;
+  const materials = Object.entries(session.description.materials || [])
+    .filter(([key, value]) => (key !== 'agenda') && (key !== 'calendar'))
+    .filter(([key, value]) => !todoStrings.includes(value))
+    .map(([key, value]) => `- [${key}](${value})`);
+  materials.push(`- [GitHub issue](${issueUrl})`);
+
   return `## Description
 ${session.description.description}
 
 ## Goal(s)
 ${session.description.goal}
 
-${materials}`;
+## Materials
+${materials.join('\n')}`;
 }
 
 
@@ -51,6 +49,18 @@ async function authenticate(page, redirectUrl) {
   }
 }
 
+async function assessCalendarEntry(page, session) {
+  const issueUrl = `https://github.com/${session.repository}/issues/${session.number}`;
+  await page.evaluate(`window.tpac_breakouts_issueurl = "${issueUrl}";`);
+  const desc = await page.$eval('textarea#event_description', el => el.value);
+  if (!desc) {
+    throw new Error('No calendar entry description');
+  }
+  if (!desc.contains(`- [GitHub issue](${issueUrl}`)) {
+    throw new Error('Calendar entry does not link back to GitHub issue');
+  }
+}
+
 async function fillCalendarEntry(page, session, project) {
   async function selectEl(selector) {
     const el = await page.waitForSelector(selector);
@@ -70,7 +80,7 @@ async function fillCalendarEntry(page, session, project) {
       await el.type(value);
     }
   }
-  async function clickOnInput(selector) {
+  async function clickOnElement(selector) {
     const el = await selectEl(selector);
     await el.click();
   }
@@ -80,9 +90,9 @@ async function fillCalendarEntry(page, session, project) {
   }
 
   await fillTextInput('input#event_title', session.title);
-  await clickOnInput('input#event_status_2'); // Status: confirmed
+  await clickOnElement('input#event_status_2'); // Status: confirmed
   await fillTextInput('textarea#event_description', formatDescription(session));
-  await clickOnInput('input#event_visibility_' + (session.description.attendance === 'restricted' ? '1' : '0'));
+  await clickOnElement('input#event_visibility_' + (session.description.attendance === 'restricted' ? '1' : '0'));
 
   await page.evaluate(`window.tpac_breakouts_date = "${project.metadata.date}";`);
   await page.$eval('input#event_start_date', el => el.value = window.tpac_breakouts_date);
@@ -99,7 +109,7 @@ async function fillCalendarEntry(page, session, project) {
   // TODO: add chairs as individual attendees by adding buttons:
   // <button id="event_individuals-input-remove-0" data-value="[w3c id]">[name]</button>
 
-  await clickOnInput('input#event_joinVisibility_' + (session.description.attendance === 'restricted' ? '1' : '0'));
+  await clickOnElement('input#event_joinVisibility_' + (session.description.attendance === 'restricted' ? '1' : '0'));
 
   await fillTextInput('input#event_joinLink', 'TODO: zoom');
   await fillTextInput('textarea#event_joiningInstructions', 'TODO: joining instructions');
@@ -108,9 +118,22 @@ async function fillCalendarEntry(page, session, project) {
   await fillTextInput('input#event_agendaUrl', session.description.materials.agenda);
   await fillTextInput('input#event_minutesUrl', session.description.materials.minutes);
 
-  // TODO: big meeting is "tpac2023", need to convert it to "15"...
-  await chooseOption('select#event_big_meeting', '15');
+  // Big meeting is "TPAC 2023", not the actual option value
+  await page.evaluate(`window.tpac_breakouts_meeting = "${project.metadata.meeting}";`);
+  await page.$$eval('select#event_big_meeting option', el =>
+    el.selected = el.innerText.startsWith(window.tpac_breakouts_meeting));
   await chooseOption('select#event_category', 'breakout-sessions');
+
+  // Click on "Create/Update but don't send notifications" button
+  // and return URL of the calendar entry
+  await clickOnElement('button#event_no_notif');
+  await page.waitForNavigation();
+  const calendarUrl = await page.evaluate(() => window.location.href);
+  if (calendarUrl.endsWith('/new')) {
+    // TODO: detect update errors somehow
+    throw new Error('Calendar entry submission failed');
+  }
+  return calendarUrl;
 }
 
 
@@ -118,6 +141,7 @@ async function main(sessionNumber) {
   // First, retrieve known information about the project and the session
   const PROJECT_OWNER = await getEnvKey('PROJECT_OWNER');
   const PROJECT_NUMBER = await getEnvKey('PROJECT_NUMBER');
+  const CALENDAR_SERVER = await getEnvKey('CALENDAR_SERVER', 'beta.w3.org');
   console.log();
   console.log(`Retrieve project ${PROJECT_OWNER}/${PROJECT_NUMBER}...`);
   const project = await fetchProject(PROJECT_OWNER, PROJECT_NUMBER);
@@ -129,7 +153,7 @@ async function main(sessionNumber) {
     throw new Error(`Session ${sessionNumber} not found in project ${PROJECT_OWNER}/${PROJECT_NUMBER}`);
   }
 
-  const sessionErrors = (await validateSession(15, project))
+  const sessionErrors = (await validateSession(sessionNumber, project))
     .filter(error => error.severity === 'error');
   if (sessionErrors.length > 0) {
     throw new Error(`Session ${sessionNumber} contains errors that need fixing`);
@@ -138,8 +162,8 @@ async function main(sessionNumber) {
   
   const calendarUrl = session.description.materials.calendar ?? undefined;
   const pageUrl = calendarUrl ?
-    `${calendarUrl.replace(/www\.w3\.org/, 'beta.w3.org')}/edit/` :
-    'https://beta.w3.org/events/meetings/new/';
+    `${calendarUrl.replace(/www\.w3\.org/, CALENDAR_SERVER)}/edit/` :
+    `https://${CALENDAR_SERVER}/events/meetings/new/`;
 
   console.log();
   console.log('Launch Puppeteer and authenticate...');
@@ -149,10 +173,27 @@ async function main(sessionNumber) {
   await authenticate(page, pageUrl);
   console.log('Launch Puppeteer and authenticate... done');
 
+  if (calendarUrl) {
+    console.log();
+    console.log('Security check: make sure calendar entry is the right one...');
+    await assessCalendarEntry();
+    console.log('Security check: make sure calendar entry is the right one... done');
+  }
+
   console.log();
   console.log('Fill calendar entry...');
-  await fillCalendarEntry(page, session, project);
+  const newCalendarUrl = await fillCalendarEntry(page, session, project);
+  console.log(`- calendar entry created/updated: ${url}`);
   console.log('Fill calendar entry... done');
+
+  // Update session's materials with calendar URL if needed
+  if (!calendarUrl) {
+    // TODO: Update session's materials with calendar URL if needed
+    if (!session.description.materials) {
+      session.description.materials = {};
+    }
+    session.description.materials.calendar = newCalendarUrl;
+  }
 
   /*await page.close();
   await browser.close();*/
