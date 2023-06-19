@@ -1,5 +1,4 @@
 import { sendGraphQLRequest } from './graphql.mjs';
-import { getEnvKey } from './envkeys.mjs';
 
 /**
  * Retrieve available project data.
