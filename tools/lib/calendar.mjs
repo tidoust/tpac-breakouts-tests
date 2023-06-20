@@ -89,6 +89,9 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
     const el = await selectEl(selector);
 
     // Clear input (select all and backspace!)
+    // Note this should use platform-specific commands in theory
+    // ... but that would not work on Mac in any case, see:
+    // https://github.com/puppeteer/puppeteer/issues/1313
     await el.click({ clickCount: 1 });
     await page.keyboard.down('ControlLeft');
     await page.keyboard.press('KeyA');
