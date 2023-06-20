@@ -17,6 +17,7 @@ async function main(sessionNumber, status) {
   console.log(`- W3C_LOGIN: ${W3C_LOGIN}`);
   const W3C_PASSWORD = await getEnvKey('W3C_PASSWORD');
   console.log(`- W3C_PASSWORD: ***`);
+  const ROOM_ZOOM = await getEnvKey('ROOM_ZOOM', {}, true);
   console.log(`Retrieve environment variables... done`);
 
   console.log();
@@ -70,6 +71,7 @@ async function main(sessionNumber, status) {
       console.log(`Convert session ${session.number} to calendar entry...`);
       await convertSessionToCalendarEntry({
         browser, session, project, status,
+        zoom: session.room && ROOM_ZOOM[session.room] ? ROOM_ZOOM[session.room] : undefined,
         calendarServer: CALENDAR_SERVER,
         login: W3C_LOGIN,
         password: W3C_PASSWORD

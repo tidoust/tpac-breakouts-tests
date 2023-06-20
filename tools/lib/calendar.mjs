@@ -77,7 +77,7 @@ async function assessCalendarEntry(page, session) {
  *
  * The function returns the URL of the calendar entry, once created/updated.
  */
-async function fillCalendarEntry(page, session, project, status) {
+async function fillCalendarEntry({ page, session, project, status, zoom }) {
   async function selectEl(selector) {
     const el = await page.waitForSelector(selector);
     if (!el) {
@@ -141,8 +141,13 @@ async function fillCalendarEntry(page, session, project, status) {
 
   await clickOnElement('input#event_joinVisibility_' + (session.description.attendance === 'restricted' ? '1' : '0'));
 
-  await fillTextInput('input#event_joinLink', 'TODO: zoom');
-  await fillTextInput('textarea#event_joiningInstructions', 'TODO: joining instructions');
+  if (zoom) {
+    await fillTextInput('input#event_joinLink', zoom);
+    await fillTextInput('textarea#event_joiningInstructions', 'TODO: joining instructions');
+  }
+  else {
+    // No Zoom info? Let's preserve what the calendar entry may already contain.
+  }
 
   await fillTextInput('input#event_chat', `https://irc.w3.org/?channels=%23${session.shortname}`);
   const agendaUrl = todoStrings.includes(session.description.materials.agenda) ?
@@ -174,7 +179,7 @@ async function fillCalendarEntry(page, session, project, status) {
  * Create/Update calendar entry that matches given session
  */
 export async function convertSessionToCalendarEntry(
-    { browser, session, project, calendarServer, login, password, status }) {
+    { browser, session, project, calendarServer, login, password, status, zoom }) {
   // First, retrieve known information about the project and the session
   const sessionErrors = (await validateSession(session.number, project))
     .filter(error => error.severity === 'error');
@@ -204,7 +209,9 @@ export async function convertSessionToCalendarEntry(
     }
 
     console.log('- fill calendar entry');
-    const newCalendarUrl = await fillCalendarEntry(page, session, project, status);
+    const newCalendarUrl = await fillCalendarEntry({
+      page, session, project, status, zoom
+    });
     console.log(`- calendar entry created/updated: ${newCalendarUrl}`);
 
     // Update session's materials with calendar URL if needed
