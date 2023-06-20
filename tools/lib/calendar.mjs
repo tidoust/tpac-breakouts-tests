@@ -136,8 +136,8 @@ export async function fillCalendarEntry(page, session, project) {
 
   // Big meeting is "TPAC 2023", not the actual option value
   await page.evaluate(`window.tpac_breakouts_meeting = "${project.metadata.meeting}";`);
-  await page.$$eval('select#event_big_meeting option', el =>
-    el.selected = el.innerText.startsWith(window.tpac_breakouts_meeting));
+  await page.$$eval('select#event_big_meeting option', options => options.forEach(el =>
+    el.selected = el.innerText.startsWith(window.tpac_breakouts_meeting)));
   await chooseOption('select#event_category', 'breakout-sessions');
 
   // Click on "Create/Update but don't send notifications" button
@@ -173,7 +173,7 @@ export async function convertSessionToCalendarEntry(
     `${calendarUrl.replace(/www\.w3\.org/, calendarServer)}edit/` :
     `https://${calendarServer}/events/meetings/new/`;
 
-  console.log('- load calendar page');
+  console.log(`- load calendar page: ${pageUrl}`);
   const page = await browser.newPage();
 
   try {
@@ -181,7 +181,7 @@ export async function convertSessionToCalendarEntry(
     await authenticate(page, login, password, pageUrl);
 
     if (calendarUrl) {
-      console.log('- security check: make sure calendar entry is the right one');
+      console.log('- make sure existing calendar entry is linked to the session');
       await assessCalendarEntry(page, session);
     }
 
@@ -190,7 +190,7 @@ export async function convertSessionToCalendarEntry(
     console.log(`- calendar entry created/updated: ${newCalendarUrl}`);
 
     // Update session's materials with calendar URL if needed
-    if (!calendarUrl) {
+    if (newCalendarUrl && !calendarUrl) {
       console.log(`- add calendar URL to session description`);
       if (!session.description.materials) {
         session.description.materials = {};

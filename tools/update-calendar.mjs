@@ -2,24 +2,62 @@ import puppeteer from 'puppeteer';
 import { getEnvKey } from './lib/envkeys.mjs';
 import { fetchProject } from './lib/project.mjs';
 import { convertSessionToCalendarEntry } from './lib/calendar.mjs';
+import { validateSession } from './lib/validate.mjs';
 import { todoStrings } from './lib/todoStrings.mjs';
 
 async function main(sessionNumber) {
-  // First, retrieve known information about the project and the session
+  console.log(`Retrieve environment variables...`);
   const PROJECT_OWNER = await getEnvKey('PROJECT_OWNER');
+  console.log(`- PROJECT_OWNER: ${PROJECT_OWNER}`);
   const PROJECT_NUMBER = await getEnvKey('PROJECT_NUMBER');
+  console.log(`- PROJECT_NUMBER: ${PROJECT_NUMBER}`);
   const CALENDAR_SERVER = await getEnvKey('CALENDAR_SERVER', 'www.w3.org');
+  console.log(`- CALENDAR_SERVER: ${CALENDAR_SERVER}`);
+  const W3C_LOGIN = await getEnvKey('W3C_LOGIN');
+  console.log(`- W3C_LOGIN: ${W3C_LOGIN}`);
+  const W3C_PASSWORD = await getEnvKey('W3C_PASSWORD');
+  console.log(`- W3C_PASSWORD: ***`);
+  console.log(`Retrieve environment variables... done`);
+
   console.log();
-  console.log(`Retrieve project ${PROJECT_OWNER}/${PROJECT_NUMBER}...`);
+  console.log(`Retrieve project ${PROJECT_OWNER}/${PROJECT_NUMBER} and session(s)...`);
   const project = await fetchProject(PROJECT_OWNER, PROJECT_NUMBER);
-  const session = project.sessions.find(s => s.number === sessionNumber);
   if (!project) {
     throw new Error(`Project ${PROJECT_OWNER}/${PROJECT_NUMBER} could not be retrieved`);
   }
-  if (!session) {
-    throw new Error(`Session ${sessionNumber} not found in project ${PROJECT_OWNER}/${PROJECT_NUMBER}`);
+  let sessions = sessionNumber ?
+    project.sessions.filter(s => s.number === sessionNumber) :
+    project.sessions.filter(s => s.slot);
+  sessions.sort((s1, s2) => s1.number - s2.number);
+  if (sessionNumber) {
+    if (sessions.length === 0) {
+      throw new Error(`Session ${sessionNumber} not found in project ${PROJECT_OWNER}/${PROJECT_NUMBER}`);
+    }
+    else if (!sessions[0].slot) {
+      throw new Error(`Session ${sessionNumber} not assigned to a slot in project ${PROJECT_OWNER}/${PROJECT_NUMBER}`);
+    }
   }
-  console.log(`Retrieve project ${PROJECT_OWNER}/${PROJECT_NUMBER}... done`);
+  else {
+    console.log(`- found ${sessions.length} sessions assigned to slots: ${sessions.map(s => s.number).join(', ')}`);
+  }
+  sessions = await Promise.all(sessions.map(async session => {
+    const sessionErrors = (await validateSession(session.number, project))
+      .filter(error => error.severity === 'error');
+    if (sessionErrors.length > 0) {
+      return null;
+    }
+    return session;
+  }));
+  sessions = sessions.filter(s => !!s);
+  if (sessionNumber) {
+    if (sessions.length === 0) {
+      throw new Error(`Session ${session.number} contains errors that need fixing`);
+    }
+  }
+  else {
+    console.log(`- found ${sessions.length} valid sessions among them: ${sessions.map(s => s.number).join(', ')}`);
+  }
+  console.log(`Retrieve project ${PROJECT_OWNER}/${PROJECT_NUMBER} and session(s)... done`);
 
   console.log();
   console.log('Launch Puppeteer...');
@@ -27,15 +65,17 @@ async function main(sessionNumber) {
   console.log('Launch Puppeteer... done');
 
   try {
-    console.log();
-    console.log('Fill calendar entry...')
-    await convertSessionToCalendarEntry({
-      browser, session, project,
-      calendarServer: CALENDAR_SERVER,
-      login: await getEnvKey('W3C_LOGIN'),
-      password: await getEnvKey('W3C_PASSWORD')
-    });
-    console.log('Fill calendar entry... done');
+    for (const session of sessions) {
+      console.log();
+      console.log(`Convert session ${session.number} to calendar entry...`);
+      await convertSessionToCalendarEntry({
+        browser, session, project,
+        calendarServer: CALENDAR_SERVER,
+        login: await getEnvKey('W3C_LOGIN'),
+        password: await getEnvKey('W3C_PASSWORD')
+      });
+      console.log(`Convert session ${session.number} to calendar entry... done`);
+    }
   }
   finally {
     await browser.close();
@@ -44,13 +84,15 @@ async function main(sessionNumber) {
 
 
 // Read session number from command-line
-if (!process.argv[2] || !process.argv[2].match(/^\d+$/)) {
-  console.log('Command needs to receive a session number as first parameter');
+const param = process.argv[2];
+if (!param || !process.argv[2].match(/^\d+$|^all$/)) {
+  console.log('Command needs to receive a session number, or "all", as first parameter');
   process.exit(1);
 }
-const sessionNumber = parseInt(process.argv[2], 10);
+const sessionNumber = param === 'all' ? undefined : parseInt(process.argv[2], 10);
 
 main(sessionNumber)
   .catch(err => {
     console.log(`Something went wrong: ${err.message}`);
+    throw err;
   });
