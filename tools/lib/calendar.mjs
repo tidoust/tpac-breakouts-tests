@@ -165,7 +165,9 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
 
   // Click on "Create/Update but don't send notifications" button
   // and return URL of the calendar entry
-  await clickOnElement('button#event_no_notif');
+  await clickOnElement(status === 'draft' ?
+    'button#event_submit' :
+    'button#event_no_notif');
   await page.waitForNavigation();
   const calendarUrl = await page.evaluate(() => window.location.href);
   if (calendarUrl.endsWith('/new') || calendarUrl.endsWith('/edit/')) {
