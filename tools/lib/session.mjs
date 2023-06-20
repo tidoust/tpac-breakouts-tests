@@ -270,7 +270,8 @@ export function serializeSessionDescription(description) {
   return sectionHandlers
     .map(handler => `### ${handler.title}${handler.required ? '' : ' (Optional)'}
 
-${description[handler.id] ? handler.serialize(description[handler.id]) : '_No response_' }`)
+${(description[handler.id] && description[handler.id] !== 0) ?
+    handler.serialize(description[handler.id]) : '_No response_' }`)
     .join('\n\n');
 }
 
