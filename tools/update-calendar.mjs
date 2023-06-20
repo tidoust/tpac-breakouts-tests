@@ -3,7 +3,6 @@ import { getEnvKey } from './lib/envkeys.mjs';
 import { fetchProject } from './lib/project.mjs';
 import { convertSessionToCalendarEntry } from './lib/calendar.mjs';
 import { validateSession } from './lib/validate.mjs';
-import { todoStrings } from './lib/todoStrings.mjs';
 
 async function main(sessionNumber, status) {
   console.log(`Retrieve environment variables...`);
@@ -62,7 +61,7 @@ async function main(sessionNumber, status) {
 
   console.log();
   console.log('Launch Puppeteer...');
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   console.log('Launch Puppeteer... done');
 
   try {
