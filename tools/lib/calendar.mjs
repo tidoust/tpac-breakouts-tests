@@ -1,6 +1,6 @@
 import { validateSession } from './validate.mjs';
 import { updateSessionDescription } from './session.mjs';
-import { todoStrings } from './todoStrings.mjs';
+import { todoStrings } from './todostrings.mjs';
 
 /**
  * Helper function to format calendar entry description from the session's info
