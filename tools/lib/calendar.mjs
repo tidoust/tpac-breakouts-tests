@@ -89,7 +89,10 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
     const el = await selectEl(selector);
 
     // Clear input (select all and backspace!)
-    await el.click({ clickCount: 3 });
+    await el.click({ clickCount: 1 });
+    await page.keyboard.down('ControlLeft');
+    await page.keyboard.press('KeyA');
+    await page.keyboard.up('ControlLeft');
     await el.press('Backspace');
 
     if (value) {
@@ -149,7 +152,7 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
     // No Zoom info? Let's preserve what the calendar entry may already contain.
   }
 
-  await fillTextInput('input#event_chat', `https://irc.w3.org/?channels=%23${session.description.shortname}`);
+  await fillTextInput('input#event_chat', `https://irc.w3.org/?channels=#${session.description.shortname}`);
   const agendaUrl = todoStrings.includes(session.description.materials.agenda) ?
     undefined : session.description.materials.agenda;
   await fillTextInput('input#event_agendaUrl', agendaUrl);
