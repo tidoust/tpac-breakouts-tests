@@ -149,7 +149,7 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
     // No Zoom info? Let's preserve what the calendar entry may already contain.
   }
 
-  await fillTextInput('input#event_chat', `https://irc.w3.org/?channels=%23${session.shortname}`);
+  await fillTextInput('input#event_chat', `https://irc.w3.org/?channels=%23${session.description.shortname}`);
   const agendaUrl = todoStrings.includes(session.description.materials.agenda) ?
     undefined : session.description.materials.agenda;
   await fillTextInput('input#event_agendaUrl', agendaUrl);
