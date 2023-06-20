@@ -65,7 +65,7 @@ async function assessCalendarEntry(page, session) {
   if (!desc) {
     throw new Error('No calendar entry description');
   }
-  if (!desc.contains(`- [GitHub issue](${issueUrl}`)) {
+  if (!desc.includes(`- [GitHub issue](${issueUrl}`)) {
     throw new Error('Calendar entry does not link back to GitHub issue');
   }
 }
