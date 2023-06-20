@@ -5,7 +5,7 @@ import { convertSessionToCalendarEntry } from './lib/calendar.mjs';
 import { validateSession } from './lib/validate.mjs';
 import { todoStrings } from './lib/todoStrings.mjs';
 
-async function main(sessionNumber) {
+async function main(sessionNumber, status) {
   console.log(`Retrieve environment variables...`);
   const PROJECT_OWNER = await getEnvKey('PROJECT_OWNER');
   console.log(`- PROJECT_OWNER: ${PROJECT_OWNER}`);
@@ -69,10 +69,10 @@ async function main(sessionNumber) {
       console.log();
       console.log(`Convert session ${session.number} to calendar entry...`);
       await convertSessionToCalendarEntry({
-        browser, session, project,
+        browser, session, project, status,
         calendarServer: CALENDAR_SERVER,
-        login: await getEnvKey('W3C_LOGIN'),
-        password: await getEnvKey('W3C_PASSWORD')
+        login: W3C_LOGIN,
+        password: W3C_PASSWORD
       });
       console.log(`Convert session ${session.number} to calendar entry... done`);
     }
@@ -84,14 +84,20 @@ async function main(sessionNumber) {
 
 
 // Read session number from command-line
-const param = process.argv[2];
-if (!param || !process.argv[2].match(/^\d+$|^all$/)) {
+const allSessions = process.argv[2];
+if (!allSessions || !allSessions.match(/^\d+$|^all$/)) {
   console.log('Command needs to receive a session number, or "all", as first parameter');
   process.exit(1);
 }
-const sessionNumber = param === 'all' ? undefined : parseInt(process.argv[2], 10);
+const sessionNumber = allSessions === 'all' ? undefined : parseInt(allSessions, 10);
 
-main(sessionNumber)
+const status = process.argv[3] ?? 'draft';
+if (!['draft', 'tentative', 'confirmed'].includes(status)) {
+  console.log('Command needs to receive a valid entry status "draft", "tentative" or "confirmed" as second parameter');
+  process.exit(1);
+}
+
+main(sessionNumber, status)
   .catch(err => {
     console.log(`Something went wrong: ${err.message}`);
     throw err;

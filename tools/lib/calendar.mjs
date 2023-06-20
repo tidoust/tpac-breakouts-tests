@@ -77,7 +77,7 @@ async function assessCalendarEntry(page, session) {
  *
  * The function returns the URL of the calendar entry, once created/updated.
  */
-export async function fillCalendarEntry(page, session, project) {
+async function fillCalendarEntry(page, session, project, status) {
   async function selectEl(selector) {
     const el = await page.waitForSelector(selector);
     if (!el) {
@@ -106,7 +106,11 @@ export async function fillCalendarEntry(page, session, project) {
   }
 
   await fillTextInput('input#event_title', session.title);
-  await clickOnElement('input#event_status_2'); // Status: confirmed
+
+  // Note statuses are different when calendar entry has already been flagged as
+  // "tentative" or "confirmed" ("draft" no longer exists in particular).
+  status = status ?? 'draft';
+  await page.$eval(`input[name="event[status]"][value=${status}]`, el => el.checked = true);
   await fillTextInput('textarea#event_description', formatDescription(session));
   await clickOnElement('input#event_visibility_' + (session.description.attendance === 'restricted' ? '1' : '0'));
 
@@ -122,8 +126,18 @@ export async function fillCalendarEntry(page, session, project) {
 
   await chooseOption('select#event_timezone', project.metadata.timezone);
 
-  // TODO: add chairs as individual attendees by adding buttons:
-  // <button id="event_individuals-input-remove-0" data-value="[w3c id]">[name]</button>
+  // Add chairs as individual attendees
+  // Note: the select field is hidden so attendees will only appear once
+  // calendar entry has been submitted.
+  const chairs = session.chairs.filter(chair => chair.w3cId);
+  if (chairs.length > 0) {
+    await page.evaluate(`window.tpac_breakouts_chairs = ${JSON.stringify(chairs, null, 2)};`);
+    await page.$eval('select#event_individuals', el => el.innerHTML =
+      window.tpac_breakouts_chairs
+        .map(chair => `<option value="${chair.w3cId}" selected="selected">${chair.name}</option>`)
+        .join('\n')
+    );
+  }
 
   await clickOnElement('input#event_joinVisibility_' + (session.description.attendance === 'restricted' ? '1' : '0'));
 
@@ -131,8 +145,12 @@ export async function fillCalendarEntry(page, session, project) {
   await fillTextInput('textarea#event_joiningInstructions', 'TODO: joining instructions');
 
   await fillTextInput('input#event_chat', `https://irc.w3.org/?channels=%23${session.shortname}`);
-  await fillTextInput('input#event_agendaUrl', session.description.materials.agenda);
-  await fillTextInput('input#event_minutesUrl', session.description.materials.minutes);
+  const agendaUrl = todoStrings.includes(session.description.materials.agenda) ?
+    undefined : session.description.materials.agenda;
+  await fillTextInput('input#event_agendaUrl', agendaUrl);
+  const minutesUrl = todoStrings.includes(session.description.materials.minutes) ?
+    undefined : session.description.materials.minutes;
+  await fillTextInput('input#event_minutesUrl', minutesUrl);
 
   // Big meeting is "TPAC 2023", not the actual option value
   await page.evaluate(`window.tpac_breakouts_meeting = "${project.metadata.meeting}";`);
@@ -156,7 +174,7 @@ export async function fillCalendarEntry(page, session, project) {
  * Create/Update calendar entry that matches given session
  */
 export async function convertSessionToCalendarEntry(
-    { browser, session, project, calendarServer, login, password }) {
+    { browser, session, project, calendarServer, login, password, status }) {
   // First, retrieve known information about the project and the session
   const sessionErrors = (await validateSession(session.number, project))
     .filter(error => error.severity === 'error');
@@ -186,7 +204,7 @@ export async function convertSessionToCalendarEntry(
     }
 
     console.log('- fill calendar entry');
-    const newCalendarUrl = await fillCalendarEntry(page, session, project);
+    const newCalendarUrl = await fillCalendarEntry(page, session, project, status);
     console.log(`- calendar entry created/updated: ${newCalendarUrl}`);
 
     // Update session's materials with calendar URL if needed
