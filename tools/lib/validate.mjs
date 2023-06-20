@@ -1,6 +1,7 @@
 import { fetchProject, validateProject } from './project.mjs';
 import { initSectionHandlers, validateSessionBody, parseSessionBody } from './session.mjs';
 import { fetchSessionChairs, validateSessionChairs } from './chairs.mjs';
+import { todoStrings } from './todostrings.mjs';
 
 
 /**
@@ -194,7 +195,7 @@ ${projectErrors.map(error => '- ' + error).join('\n')}`);
 
   function isMaterialMissing(name) {
     return !session.description.materials[name] ||
-      ['@', '@@', '@@@', 'TBD', 'TODO'].includes(session.description.materials[name].toUpperCase());
+      todoStrings.includes(session.description.materials[name].toUpperCase());
   }
 
   // If breakout session takes place in less than 2 days (or past),
