@@ -11,7 +11,7 @@ function formatDescription(session) {
     .filter(([key, value]) => (key !== 'agenda') && (key !== 'calendar'))
     .filter(([key, value]) => !todoStrings.includes(value))
     .map(([key, value]) => `- [${key}](${value})`);
-  materials.push(`- [GitHub issue](${issueUrl})`);
+  materials.push(`- [Session proposal on GitHub](${issueUrl})`);
 
   return `## Description
 ${session.description.description}
@@ -77,7 +77,7 @@ async function assessCalendarEntry(page, session) {
   if (!desc) {
     throw new Error('No calendar entry description');
   }
-  if (!desc.includes(`- [GitHub issue](${issueUrl}`)) {
+  if (!desc.includes(`- [Session proposal on GitHub](${issueUrl}`)) {
     throw new Error('Calendar entry does not link back to GitHub issue');
   }
 }
