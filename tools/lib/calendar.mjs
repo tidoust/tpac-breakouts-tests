@@ -5,7 +5,7 @@ import { todoStrings } from './todostrings.mjs';
 /**
  * Helper function to format calendar entry description from the session's info
  */
-function formatDescription(session) {
+function formatAgenda(session) {
   const issueUrl = `https://github.com/${session.repository}/issues/${session.number}`;
   const materials = Object.entries(session.description.materials || [])
     .filter(([key, value]) => (key !== 'agenda') && (key !== 'calendar') && (key !== 'minutes'))
@@ -13,13 +13,16 @@ function formatDescription(session) {
     .map(([key, value]) => `- [${key}](${value})`);
   materials.push(`- [Session proposal on GitHub](${issueUrl})`);
 
-  return `### Description
+  return `**Chairs:**
+${session.chairs.map(chair => chair.name ?? '@' + chair.login).join(', ')}
+
+**Description:**
 ${session.description.description}
 
-### Goal(s)
+**Goal(s):**
 ${session.description.goal}
 
-### Materials
+**Materials:**
 ${materials.join('\n')}`;
 }
 
@@ -73,9 +76,9 @@ export async function authenticate(page, login, password, redirectUrl) {
 async function assessCalendarEntry(page, session) {
   const issueUrl = `https://github.com/${session.repository}/issues/${session.number}`;
   await page.evaluate(`window.tpac_breakouts_issueurl = "${issueUrl}";`);
-  const desc = await page.$eval('textarea#event_description', el => el.value);
+  const desc = await page.$eval('textarea#event_agenda', el => el.value);
   if (!desc) {
-    throw new Error('No calendar entry description');
+    throw new Error('No detailed agenda in calendar entry');
   }
   if (!desc.includes(`- [Session proposal on GitHub](${issueUrl}`)) {
     throw new Error('Calendar entry does not link back to GitHub issue');
@@ -129,7 +132,11 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
   // "tentative" or "confirmed" ("draft" no longer exists in particular).
   status = status ?? 'draft';
   await page.$eval(`input[name="event[status]"][value=${status}]`, el => el.checked = true);
-  await fillTextInput('textarea#event_description', formatDescription(session));
+  await fillTextInput('textarea#event_description', session.description.description);
+
+  const room = project.rooms.find(room => room.name === session.room);
+  await fillTextInput('input#event_location', room?.label ?? '');
+
   await clickOnElement('input#event_visibility_' + (session.description.attendance === 'restricted' ? '1' : '0'));
 
   await page.evaluate(`window.tpac_breakouts_date = "${project.metadata.date}";`);
@@ -161,7 +168,7 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
 
   if (zoom) {
     await fillTextInput('input#event_joinLink', zoom);
-    await fillTextInput('textarea#event_joiningInstructions', 'TODO: joining instructions');
+    await fillTextInput('textarea#event_joiningInstructions', '');
   }
   else {
     // No Zoom info? Let's preserve what the calendar entry may already contain.
@@ -172,6 +179,9 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
   const agendaUrl = todoStrings.includes(session.description.materials.agenda) ?
     undefined : session.description.materials.agenda;
   await fillTextInput('input#event_agendaUrl', agendaUrl);
+
+  await fillTextInput('textarea#event_agenda', formatAgenda(session));
+
   const minutesUrl = todoStrings.includes(session.description.materials.minutes) ?
     undefined : session.description.materials.minutes;
   await fillTextInput('input#event_minutesUrl', minutesUrl);
