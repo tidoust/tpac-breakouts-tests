@@ -43,7 +43,7 @@ body:
     attributes:
       label: IRC channel (Optional)
       description: |
-        Shortname for the irc.w3.org channel (e.g., `my-fav-session`)
+        Shortname for the irc.w3.org channel (e.g., `my-fav-session`). If not provided, shortname will be generated from title.
     validations:
       required: false
 
@@ -104,10 +104,15 @@ body:
     validations:
       required: false
 
+  - type: markdown
+    attributes:
+      value: |
+        ## Materials
+
   - type: textarea
     id: materials
     attributes:
-      label: Meeting materials
+      label: Agenda, minutes, slides, etc.
       description: |
         As the agenda and meeting materials become available, you will be able to update your session description in markdown to add links. Similarly, after the meeting, you can link to minutes.
 
