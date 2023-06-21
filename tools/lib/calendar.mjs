@@ -8,18 +8,18 @@ import { todoStrings } from './todostrings.mjs';
 function formatDescription(session) {
   const issueUrl = `https://github.com/${session.repository}/issues/${session.number}`;
   const materials = Object.entries(session.description.materials || [])
-    .filter(([key, value]) => (key !== 'agenda') && (key !== 'calendar'))
+    .filter(([key, value]) => (key !== 'agenda') && (key !== 'calendar') && (key !== 'minutes'))
     .filter(([key, value]) => !todoStrings.includes(value))
     .map(([key, value]) => `- [${key}](${value})`);
   materials.push(`- [Session proposal on GitHub](${issueUrl})`);
 
-  return `## Description
+  return `### Description
 ${session.description.description}
 
-## Goal(s)
+### Goal(s)
 ${session.description.goal}
 
-## Materials
+### Materials
 ${materials.join('\n')}`;
 }
 
