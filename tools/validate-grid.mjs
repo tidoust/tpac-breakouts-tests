@@ -19,11 +19,12 @@ import { updateSessionLabels } from './lib/session.mjs';
 import { sendGraphQLRequest } from './lib/graphql.mjs';
 
 const schedulingErrors = [
- 'error: scheduling',
- 'warning: capacity',
- 'warning: conflict',
- 'warning: duration',
- 'warning: track'
+  'error: chair conflict',
+  'error: scheduling',
+  'warning: capacity',
+  'warning: conflict',
+  'warning: duration',
+  'warning: track'
 ];
 
 async function main(validation) {

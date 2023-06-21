@@ -135,6 +135,22 @@ ${projectErrors.map(error => '- ' + error).join('\n')}`);
     }
   }
 
+  // Check absence of conflict with sessions with same chair(s)
+  const chairConflictErrors = project.sessions
+    .filter(s => s !== session &&
+      s.slot === session.slot &&
+      (s.author.login === session.author.login ||
+        s.chairs.find(chair => session.chairs.find(c => c.login === chair || c.login === chair?.login))))
+    .map(s => `Same slot as session "${s.title}" (#${s.number}), which share a common chair`);
+  if (chairConflictErrors.length > 0) {
+    errors.push({
+      session: sessionNumber,
+      severity: 'error',
+      type: 'chair conflict',
+      messages: chairConflictErrors
+    });
+  }
+
   // Check assigned slot is different from conflicting sessions
   // (skipped if the list of conflicting sessions is invalid)
   if (!hasConflictErrors && session.slot && session.description.conflicts) {

@@ -23,6 +23,11 @@ const labels = [
     "color": "1D76DB"
   },
   {
+    "name": "error: chair conflict",
+    "description": "Session scheduled at the same time as another session with an overlapping chair",
+    "color": "B60205"
+  },
+  {
     "name": "error: chairs",
     "description": "Cannot retrieve the W3C account of a session chair",
     "color": "B60205"
