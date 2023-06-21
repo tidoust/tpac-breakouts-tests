@@ -25,6 +25,18 @@ ${materials.join('\n')}`;
 
 
 /**
+ * Helper function to generate a shortname from the session's title
+ */
+function generateShortname(session) {
+  return session.title
+    .toLowerCase()
+    .replace(/\([^\)]\)/g, '')
+    .replace(/[^a-z0-0\-\s]/g, '')
+    .replace(/\s+/g, '-');
+}
+
+
+/**
  * Login to W3C server.
  *
  * The function throws if login fails.
@@ -155,7 +167,8 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
     // No Zoom info? Let's preserve what the calendar entry may already contain.
   }
 
-  await fillTextInput('input#event_chat', `https://irc.w3.org/?channels=#${session.description.shortname}`);
+  await fillTextInput('input#event_chat',
+    `https://irc.w3.org/?channels=#${session.description.shortname ?? generateShortname(session)}`);
   const agendaUrl = todoStrings.includes(session.description.materials.agenda) ?
     undefined : session.description.materials.agenda;
   await fillTextInput('input#event_agendaUrl', agendaUrl);
