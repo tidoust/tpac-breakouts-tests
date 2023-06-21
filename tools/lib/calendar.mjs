@@ -135,7 +135,7 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
   // Add chairs as individual attendees
   // Note: the select field is hidden so attendees will only appear once
   // calendar entry has been submitted.
-  const chairs = session.chairs.filter(chair => chair.w3cId);
+  const chairs = session.chairs.filter(chair => chair.w3cId && chair.w3cId !== -1);
   if (chairs.length > 0) {
     await page.evaluate(`window.tpac_breakouts_chairs = ${JSON.stringify(chairs, null, 2)};`);
     await page.$eval('select#event_individuals', el => el.innerHTML =

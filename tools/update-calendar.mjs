@@ -17,6 +17,7 @@ async function main(sessionNumber, status) {
   const W3C_PASSWORD = await getEnvKey('W3C_PASSWORD');
   console.log(`- W3C_PASSWORD: ***`);
   const ROOM_ZOOM = await getEnvKey('ROOM_ZOOM', {}, true);
+  const CHAIR_W3CID = await getEnvKey('CHAIR_W3CID', {}, true);
   console.log(`Retrieve environment variables... done`);
 
   console.log();
@@ -25,6 +26,7 @@ async function main(sessionNumber, status) {
   if (!project) {
     throw new Error(`Project ${PROJECT_OWNER}/${PROJECT_NUMBER} could not be retrieved`);
   }
+  project.chairsToW3CID = CHAIR_W3CID;
   let sessions = sessionNumber ?
     project.sessions.filter(s => s.number === sessionNumber) :
     project.sessions.filter(s => s.slot);

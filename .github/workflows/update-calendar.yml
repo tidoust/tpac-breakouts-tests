@@ -66,3 +66,7 @@ jobs:
           # with room names as keys.
           ROOM_ZOOM: ${{ vars.ROOM_ZOOM }}
 
+          # Mapping between chair GitHub identities and W3C IDs must be stored
+          # in a variable. Structure is a JSON object with identities as keys.
+          CHAIR_W3CID: ${{ vars.CHAIR_W3CID }}
+

@@ -67,7 +67,7 @@ ${projectErrors.map(error => '- ' + error).join('\n')}`);
 
   // Retrieve information about chairs, unless that was already done
   if (!session.chairs) {
-    session.chairs = await fetchSessionChairs(session);
+    session.chairs = await fetchSessionChairs(session, project.chairsToW3CID);
   }
   const chairsErrors = validateSessionChairs(session.chairs);
   if (chairsErrors.length > 0) {
