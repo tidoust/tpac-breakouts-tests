@@ -252,7 +252,9 @@ export function parseSessionBody(body) {
         handler.title === section.title);
       return {
         id: sectionHandler.id,
-        value: section.value ? sectionHandler.parse(section.value) : null
+        value: section.value && section.value !== 0 ?
+          sectionHandler.parse(section.value) :
+          null
       };
     })
     .forEach(input => session[input.id] = input.value);
