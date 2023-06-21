@@ -73,6 +73,11 @@ const labels = [
     "color": "FBCA04"
   },
   {
+    "name": "warning: minutes origin",
+    "description": "Minutes are not stored on www.w3.org",
+    "color": "FBCA04"
+  },
+  {
     "name": "warning: track",
     "description": "Session scheduled at the same time as another session in the same track",
     "color": "FBCA04"
