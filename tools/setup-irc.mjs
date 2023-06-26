@@ -33,7 +33,7 @@ function getShortname(session) {
       .replace(/\s+/g, '-');
 }
 
-async function main({ number, slot } = {}) {
+async function main({ number, slot, onlyCommands } = {}) {
   const PROJECT_OWNER = await getEnvKey('PROJECT_OWNER');
   const PROJECT_NUMBER = await getEnvKey('PROJECT_NUMBER');
   console.log();
@@ -89,7 +89,7 @@ async function main({ number, slot } = {}) {
       bot.send('INVITE', 'RRSAgent', channel);
     }
     else if (nick === 'RRSAgent') {
-      bot.say(channel, 'RRSAgent, make logs public');
+      bot.say(channel, `RRSAgent, make logs ${session.description.attendance === 'restricted' ? 'member' : 'public'}`);
       bot.say(channel, `Meeting: ${session.title}`);
       bot.say(channel, `Chair: ${session.chairs.map(c => c.name).join(', ')}`);
       if (session.description.materials.agenda &&
@@ -101,6 +101,35 @@ async function main({ number, slot } = {}) {
     else if (nick === 'Zakim') {
       // No specific command to send when Zakim joins
     }
+  }
+
+  if (onlyCommands) {
+    const output = sessions
+      .map(session => {
+        const room = project.rooms.find(r => r.name === session.room);
+        const roomLabel = room ? `- ${room.label} ` : '';
+        let commands = `
+          /join #${getShortname(session)}
+          /invite RRSAgent
+          /invite Zakim
+          /topic TPAC breakout: ${session.title} ${roomLabel}- ${session.slot}
+          RRSAgent, make logs ${session.description.attendance === 'restricted' ? 'member' : 'public'}
+          Meeting: ${session.title}
+          Chair: ${session.chairs.map(c => c.name).join(', ')}
+        `;
+        if (session.description.materials.agenda &&
+            !todoStrings.includes(session.description.materials.agenda)) {
+          commands += `
+            Agenda: ${session.description.materials.agenda}
+          `;
+        }
+        return commands;
+      })
+      .map(commands => commands.replace(/^\s+/gm, ''))
+      .join('-----\n');
+    console.log();
+    console.log(output);
+    return;
   }
 
   console.log();
@@ -170,10 +199,14 @@ if (!process.argv[3] || !process.argv[3].match(/^(\d+|all)$/)) {
   process.exit(1);
 }
 
+// Command only?
+const onlyCommands = process.argv[4] === 'commands';
+
+
 const slot = process.argv[2] === 'all' ? undefined : process.argv[2];
 const number = process.argv[3] === 'all' ? undefined : parseInt(process.argv[3], 10);
 
-main({ slot, number })
+main({ slot, number, onlyCommands })
   .then(_ => process.exit(0))
   .catch(err => {
     console.log(`Something went wrong: ${err.message}`);
