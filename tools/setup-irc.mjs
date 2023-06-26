@@ -3,14 +3,21 @@
  *
  * To run the tool:
  *
- *  node tools/setup-irc.mjs [sessionNumber or slot]
+ *  node tools/setup-irc.mjs [slot or "all"] [sessionNumber or "all"] [commands]
  *
- * where [sessionNumber] is the number of the session issue for which the IRC
- * channel should be initialized (e.g. 15), the slot for which IRC channels
- * should be initialized, or "all" to initialize all channels.
+ * where [slot or "all"] is the slot start time of sessions to initialize
+ * (e.g. "9:30"), or "all" to initialize sessions across slots. The job is
+ * intended to be run shortly before each slot to init RRSAgent and Zakim. The
+ * "all" choice is probably not a good idea unless you also specify a session
+ * number: IRC bots leave channels after 2 hours of inactivity!
+ * 
+ * [sessionNumber or "all"] is the session issue number or "all" to initialize
+ * IRC channels for all valid sessions in the slot.
+ * 
+ * set [commands] to "commands" to only output the IRC commands to run without
+ * actually running them.
  *
- * The tools should essentially be run once per slot, shortly before the
- * sessions start.
+ * The tool should run once per slot, shortly before the sessions start.
  */
 
 import { getEnvKey } from './lib/envkeys.mjs';
