@@ -24,13 +24,13 @@ const botName = 'tpac-breakout-bot';
 /**
  * Helper function to generate a shortname from the session's title
  */
-function getShortname(session) {
-  return session?.description?.shortname ??
-    session.title
+function getChannel(session) {
+  return ('#' + session?.description?.shortname) ??
+    ('#' + session.title
       .toLowerCase()
       .replace(/\([^\)]\)/g, '')
       .replace(/[^a-z0-0\-\s]/g, '')
-      .replace(/\s+/g, '-');
+      .replace(/\s+/g, '-'));
 }
 
 async function main({ number, slot, onlyCommands } = {}) {
@@ -76,27 +76,71 @@ async function main({ number, slot, onlyCommands } = {}) {
   }
   console.log(`Retrieve project ${PROJECT_OWNER}/${PROJECT_NUMBER} and session(s)... done`);
 
+  console.log();
+  console.log('Connect to W3C IRC server...');
+  const bot = onlyCommands ?
+    undefined :
+    new irc.Client('irc.w3.org', botName, {
+      channels: []
+    });
+
+  function joinChannel(session) {
+    const channel = getChannel(session);
+    console.log(`/join ${channel}`);
+    if (!onlyCommands) {
+      bot.join(channel);
+    }
+  }
+
+  function inviteBot(session, name) {
+    const channel = getChannel(session);
+    console.log(`/invite ${name}`);
+    if (!onlyCommands) {
+      bot.send('INVITE', name, channel);
+    }
+  }
+
+  function setTopic(session) {
+    const channel = getChannel(session);
+    const room = project.rooms.find(r => r.name === session.room);
+    const roomLabel = room ? `- ${room.label} ` : '';
+    const topic = `TPAC breakout: ${session.title} ${roomLabel}- ${session.slot}`;
+    console.log(`/topic ${topic}`);
+    if (!onlyCommands) {
+      bot.send('TOPIC', channel, topic);
+    }
+  }
+
+  function say(channel, msg) {
+    console.log(msg);
+    if (!onlyCommands) {
+      bot.say(channel, msg);
+    }
+  }
+
   function sendChannelBotCommands(channel, nick) {
-    const session = sessions.find(s => channel = '#' + getShortname(s));
+    const session = sessions.find(s => channel === getChannel(s));
     if (!session) {
       return;
     }
     const room = project.rooms.find(r => r.name === session.room);
     const roomLabel = room ? `- ${room.label} ` : '';
     if (nick === botName) {
-      bot.send('TOPIC', channel, `TPAC breakout: ${session.title} ${roomLabel}- ${session.slot}`);
-      bot.send('INVITE', 'Zakim', channel);
-      bot.send('INVITE', 'RRSAgent', channel);
+      setTopic(session);
+      inviteBot(session, 'Zakim');
+      inviteBot(session, 'RRSAgent');
     }
     else if (nick === 'RRSAgent') {
-      bot.say(channel, `RRSAgent, make logs ${session.description.attendance === 'restricted' ? 'member' : 'public'}`);
-      bot.say(channel, `Meeting: ${session.title}`);
-      bot.say(channel, `Chair: ${session.chairs.map(c => c.name).join(', ')}`);
+      say(channel, `RRSAgent, make logs ${session.description.attendance === 'restricted' ? 'member' : 'public'}`);
+      say(channel, `Meeting: ${session.title}`);
+      say(channel, `Chair: ${session.chairs.map(c => c.name).join(', ')}`);
       if (session.description.materials.agenda &&
           !todoStrings.includes(session.description.materials.agenda)) {
-        bot.say(channel, `Agenda: ${session.description.materials.agenda}`);
+        say(channel, `Agenda: ${session.description.materials.agenda}`);
       }
-      bot.part(channel);
+      if (bot) {
+        bot.part(channel);
+      }
     }
     else if (nick === 'Zakim') {
       // No specific command to send when Zakim joins
@@ -104,45 +148,26 @@ async function main({ number, slot, onlyCommands } = {}) {
   }
 
   if (onlyCommands) {
-    const output = sessions
-      .map(session => {
-        const room = project.rooms.find(r => r.name === session.room);
-        const roomLabel = room ? `- ${room.label} ` : '';
-        let commands = `
-          /join #${getShortname(session)}
-          /invite RRSAgent
-          /invite Zakim
-          /topic TPAC breakout: ${session.title} ${roomLabel}- ${session.slot}
-          RRSAgent, make logs ${session.description.attendance === 'restricted' ? 'member' : 'public'}
-          Meeting: ${session.title}
-          Chair: ${session.chairs.map(c => c.name).join(', ')}
-        `;
-        if (session.description.materials.agenda &&
-            !todoStrings.includes(session.description.materials.agenda)) {
-          commands += `
-            Agenda: ${session.description.materials.agenda}
-          `;
-        }
-        return commands;
-      })
-      .map(commands => commands.replace(/^\s+/gm, ''))
-      .join('-----\n');
-    console.log();
-    console.log(output);
+    for (const session of sessions) {
+      console.log();
+      console.log(`session ${session.number}`);
+      console.log('-----');
+      joinChannel(session);
+      sendChannelBotCommands(getChannel(session), botName);
+      sendChannelBotCommands(getChannel(session), 'RRSAgent');
+      console.log('-----');
+    }
     return;
   }
-
-  console.log();
-  console.log('Connect to W3C IRC server...');
-  const bot = new irc.Client('irc.w3.org', botName, {
-    channels: []
-  });
 
   bot.addListener('registered', msg => {
     console.log(`- Received message: ${msg.command}`);
     console.log('Connect to W3C IRC server... done');
     for (const session of sessions) {
-      bot.join('#' + getShortname(session));
+      console.log();
+      console.log(`session ${session.number}`);
+      console.log('-----');
+      joinChannel(session);
     }
   });
 
@@ -150,13 +175,11 @@ async function main({ number, slot, onlyCommands } = {}) {
     //console.log(JSON.stringify(msg, null, 2));
   });
 
-
   bot.addListener('error', err => {
     if (err.command === 'err_useronchannel') {
       // We invited bots but they're already there, that's good!
       const nick = err.args[1];
       const channel = err.args[2];
-      console.log(`- ${nick} was already in ${channel}`);
       sendChannelBotCommands(channel, nick);
       return;
     }
@@ -164,7 +187,6 @@ async function main({ number, slot, onlyCommands } = {}) {
   });
 
   bot.addListener('join', (channel, nick, message) => {
-    console.log(`- ${nick} joined ${channel}`);
     sendChannelBotCommands(channel, nick);
   });
 
@@ -172,11 +194,12 @@ async function main({ number, slot, onlyCommands } = {}) {
     if (nick !== botName) {
       return;
     }
-    const session = sessions.find(s => channel = '#' + getShortname(s));
+    const session = sessions.find(s => channel === getChannel(s));
     if (!session) {
       return;
     }
     session.done = true;
+    console.log('-----');
     if (sessions.every(s => s.done)) {
       bot.disconnect(_ => promiseResolve());
     }
