@@ -41,7 +41,7 @@ async function main({ number, slot } = {}) {
   const project = await fetchProject(PROJECT_OWNER, PROJECT_NUMBER);
 
   let sessions = project.sessions.filter(s => s.slot &&
-    ((!number && !slot) || s.number === number || s.slot === slot));
+    ((!number && !slot) || s.number === number || s.slot.startsWith(slot)));
   sessions.sort((s1, s2) => s1.number - s2.number);
   if (number) {
     if (sessions.length === 0) {
@@ -158,18 +158,22 @@ async function main({ number, slot } = {}) {
 }
 
 
-// Read session number or slot from command-line
-if (!process.argv[2] || !process.argv[2].match(/^(\d+|all|\d{1:2}:\d{2})$/)) {
-  console.log('Command needs to receive a session number (e.g., 15), a slot (e.g. 9:30) or "all" as first parameter');
+// Read slot from command-line
+if (!process.argv[2] || !process.argv[2].match(/^(\d{1:2}:\d{2}|all)$/)) {
+  console.log('Command needs to receive a valid slot start time (e.g., 9:30) or "all" as first parameter');
   process.exit(1);
 }
 
-const sessionNumber = process.argv[2].match(/^\d+$/) ?
-  parseInt(process.argv[2], 10) : undefined;
-const slot = process.argv[2].match(/^\d{1:2}:\d{2}$/) ?
-  process.argv[2] : undefined;
+// Read session number from command-line
+if (!process.argv[3] || !process.argv[3].match(/^(\d+|all)$/)) {
+  console.log('Command needs to receive a session number (e.g., 15) or "all" as second parameter');
+  process.exit(1);
+}
 
-main({ number: sessionNumber, slot })
+const slot = process.argv[2] === 'all' ? undefined : process.argv[2];
+const number = process.argv[3] === 'all' ? undefined : parseInt(process.argv[3], 10);
+
+main({ slot, number })
   .then(_ => process.exit(0))
   .catch(err => {
     console.log(`Something went wrong: ${err.message}`);
