@@ -13,6 +13,15 @@ function formatAgenda(session) {
     .map(([key, value]) => `- [${key}](${value})`);
   materials.push(`- [Session proposal on GitHub](${issueUrl})`);
 
+  const tracks = session.labels
+    .filter(label => label.startsWith('track: '))
+    .map(label => '- ' + label.substring('track: '.length));
+  tracks.sort();
+  const tracksStr = tracks.length > 0 ? `
+**Track(s):**
+${tracks.join('\n')}` :
+    '';
+
   return `**Chairs:**
 ${session.chairs.map(chair => chair.name ?? '@' + chair.login).join(', ')}
 
@@ -23,7 +32,8 @@ ${session.description.description}
 ${session.description.goal}
 
 **Materials:**
-${materials.join('\n')}`;
+${materials.join('\n')}
+${tracksStr}`;
 }
 
 
