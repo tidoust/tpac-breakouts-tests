@@ -123,9 +123,9 @@ async function main(sessionNumber, changesFile) {
   console.log(`Update labels on session... done`);
 
   // Prefix IRC channel with '#' if not already done
-  if (session.description.shortname &&
-      !session.description.shortname.startsWith('#') &&
-      !report.find(err => err.severity === 'error' && err.type === 'format')) {
+  if (!report.find(err => err.severity === 'error' && err.type === 'format') &&
+      session.description.shortname &&
+      !session.description.shortname.startsWith('#')) {
     console.log();
     console.log(`Add '#' prefix to IRC channel...`);
     session.description.shortname = '#' + session.description.shortname;
@@ -134,8 +134,8 @@ async function main(sessionNumber, changesFile) {
   }
 
   // Or generate IRC if it was not provided.
-  if (!session.description.shortname &&
-      !report.find(err => err.severity === 'error' && err.type === 'format')) {
+  if (!report.find(err => err.severity === 'error' && err.type === 'format') &&
+      !session.description.shortname) {
     console.log();
     console.log(`Generate IRC channel...`);
     session.description.shortname = generateShortname(session);
