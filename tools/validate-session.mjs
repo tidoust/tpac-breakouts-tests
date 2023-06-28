@@ -22,8 +22,19 @@
 import { getEnvKey } from './lib/envkeys.mjs';
 import { fetchProject } from './lib/project.mjs'
 import { validateSession } from './lib/validate.mjs';
-import { parseSessionBody, updateSessionLabels } from './lib/session.mjs';
+import { parseSessionBody, updateSessionLabels, updateSessionDescription } from './lib/session.mjs';
 import { sendGraphQLRequest } from './lib/graphql.mjs';
+
+/**
+ * Helper function to generate a shortname from the session's title
+ */
+function generateShortname(session) {
+  return '#' + session.title
+    .toLowerCase()
+    .replace(/\([^\)]\)/g, '')
+    .replace(/[^a-z0-0\-\s]/g, '')
+    .replace(/\s+/g, '-');
+}
 
 async function main(sessionNumber, changesFile) {
   // First, retrieve known information about the project and the session
@@ -110,6 +121,21 @@ async function main(sessionNumber, changesFile) {
     .sort();
   await updateSessionLabels(session, project, newLabels);
   console.log(`Update labels on session... done`);
+
+  // Prefix IRC channel with '#' if not already done
+  if (session.description.shortname &&
+      !session.description.shortname.startsWith('#') &&
+      !report.find(err => err.severity === 'error' && err.type === 'format')) {
+    session.description.shortname = '#' + session.description.shortname;
+    await updateSessionDescription(session);
+  }
+
+  // Or generate IRC if it was not provided.
+  if (!session.description.shortname &&
+      !report.find(err => err.severity === 'error' && err.type === 'format')) {
+    session.description.shortname = generateShortname(session);
+    await updateSessionDescription(session);
+  }
 }
 
 
