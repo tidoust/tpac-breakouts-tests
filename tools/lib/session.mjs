@@ -81,7 +81,6 @@ export async function initSectionHandlers() {
         break;
 
       case 'shortname':
-        handler.parse = value => value.startsWith('#') ? value : `#${value}`;
         handler.validate = value => value.match(/^#?[A-Za-z0-9\-_]+$/);
         break;
 

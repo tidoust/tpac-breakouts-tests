@@ -126,15 +126,21 @@ async function main(sessionNumber, changesFile) {
   if (session.description.shortname &&
       !session.description.shortname.startsWith('#') &&
       !report.find(err => err.severity === 'error' && err.type === 'format')) {
+    console.log();
+    console.log(`Add '#' prefix to IRC channel...`);
     session.description.shortname = '#' + session.description.shortname;
     await updateSessionDescription(session);
+    console.log(`Add '#' prefix to IRC channel... done`);
   }
 
   // Or generate IRC if it was not provided.
   if (!session.description.shortname &&
       !report.find(err => err.severity === 'error' && err.type === 'format')) {
+    console.log();
+    console.log(`Generate IRC channel...`);
     session.description.shortname = generateShortname(session);
     await updateSessionDescription(session);
+    console.log(`Generate IRC channel... done`);
   }
 }
 
