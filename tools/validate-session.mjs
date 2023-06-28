@@ -133,7 +133,7 @@ async function main(sessionNumber, changesFile) {
     console.log(`Add '#' prefix to IRC channel... done`);
   }
 
-  // Or generate IRC if it was not provided.
+  // Or generate IRC channel if it was not provided.
   if (!report.find(err => err.severity === 'error' && err.type === 'format') &&
       !session.description.shortname) {
     console.log();
