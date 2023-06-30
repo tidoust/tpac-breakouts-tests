@@ -75,7 +75,7 @@ export async function initSectionHandlers() {
           .filter(nick => !!nick)
           .map(nick => {
             if (nick.startsWith('@')) {
-              nick
+              return nick
                 .split(/\s/)
                 .map(n => n.trim())
                 .map(n => { return { login: n.substring(1) }; });
