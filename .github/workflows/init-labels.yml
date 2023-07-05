@@ -22,7 +22,7 @@ jobs:
         run: npm ci
 
       - name: Run the init labels script
-        run: node tools/manage-repo-labels.mjs ${{ vars.PROJECT_OWNER || 'w3c' }} ${{ vars.PROJECT_NUMBER }}
+        run: node tools/manage-repo-labels.mjs ${{ GITHUB_REPOSITORY }}
         env:
           # A valid Personal Access Token (classic version) with project
           # and public_repo scope.
