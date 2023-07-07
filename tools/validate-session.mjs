@@ -116,7 +116,7 @@ async function main(sessionNumber, changesFile) {
   // "check: irc channel" label
   if (!report.find(err => err.severity === 'error' && err.type === 'format') &&
       !session.description.shortname) {
-    errors.push({
+    report.push({
       session: sessionNumber,
       severity: 'check',
       type: 'irc channel',
