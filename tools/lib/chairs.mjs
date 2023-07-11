@@ -17,23 +17,23 @@ import { fetchW3CAccount } from './w3caccount.mjs';
  *
  * The object may only contain the GitHub login or the W3C account name.
  */
-export async function fetchSessionChairs(session, chairs2W3CID) {
+export async function fetchSessionChairs(session, chairs2W3CHash) {
   const chairs = [];
   if (session.author) {
-    const w3cAccount = await fetchW3CAccount(session.author.databaseId);
+    const w3cAccount = await fetchW3CAccount({
+      databaseId: session.author.databaseId,
+      w3cHash: chairs2W3CHash?.[session.author.login]
+    });
     const chair = {
       databaseId: session.author.databaseId,
       avatarUrl: session.author.avatarUrl,
-      login: session.author.login
+      login: session.author.login,
+      name: session.author.login
     };
     if (w3cAccount) {
       chair.w3cId = w3cAccount.w3cId;
       chair.name = w3cAccount.name;
       chair.email = w3cAccount.email;
-    }
-    else if (chairs2W3CID?.[session.author.login]) {
-      chair.w3cId = chairs2W3CID[session.author.login];
-      chair.name = session.author.login;
     }
     chairs.push(chair);
   }
@@ -51,20 +51,26 @@ export async function fetchSessionChairs(session, chairs2W3CID) {
         if (githubAccount.data.user) {
           chair.databaseId = githubAccount.data.user.databaseId;
           chair.avatarUrl = githubAccount.data.user.avatarUrl;
-          const w3cAccount = await fetchW3CAccount(chair.databaseId);
+          const w3cAccount = await fetchW3CAccount({
+            databaseId: session.author.databaseId,
+            w3cHash: chairs2W3CHash?.[session.author.login]
+          });
           if (w3cAccount) {
             chair.w3cId = w3cAccount.w3cId;
             chair.name = w3cAccount.name;
             chair.email = w3cAccount.email;
           }
-          else if (chairs2W3CID?.[chair.login]) {
-            chair.w3cId = chairs2W3CID[chair.login];
-            chair.name = chair.login;
-          }
         }
       }
-      else if (chairs2W3CID?.[chair.name]) {
-        chair.w3cId = chairs2W3CID[chair.name];
+      else if (chairs2W3CHash?.[chair.name]) {
+        const w3cAccount = await fetchW3CAccount({
+          w3cHash: chairs2W3CHash[chair.name]
+        });
+        if (w3cAccount) {
+          chair.w3cId = w3cAccount.w3cId;
+          chair.name = w3cAccount.name;
+          chair.email = w3cAccount.email;
+        }
       }
       chairs.push(chair);
     }
