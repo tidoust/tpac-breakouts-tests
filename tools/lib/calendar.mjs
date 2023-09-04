@@ -176,7 +176,7 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
   // Note statuses are different when calendar entry has already been flagged as
   // "tentative" or "confirmed" ("draft" no longer exists in particular).
   status = status ?? 'draft';
-  await page.$eval(`input[name="event[status]"][value=${status}]`, el => el.checked = true);
+  await page.$eval(`input[name="event[status]"][value=${status}]`, el => el.click());
   await fillTextInput('textarea#event_description', session.description.description);
 
   const room = project.rooms.find(room => room.name === session.room);
@@ -210,7 +210,8 @@ async function fillCalendarEntry({ page, session, project, status, zoom }) {
     );
   }
 
-  await clickOnElement('input#event_joinVisibility_' + (session.description.attendance === 'restricted' ? '1' : '0'));
+  // Show joining information to "Holders of a W3C account"
+  await clickOnElement('input#event_joinVisibility_1');
 
   if (getZoomLink(zoom)) {
     await fillTextInput('input#event_joinLink', getZoomLink(zoom));
