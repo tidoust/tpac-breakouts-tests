@@ -64,16 +64,6 @@ body:
       value: |
         ## Preferences
 
-  - type: dropdown
-    id: duration
-    attributes:
-      label: Session duration
-      options:
-        - 60 minutes (Default)
-        - 30 minutes
-    validations:
-      required: true
-
   - type: textarea
     id: conflicts
     attributes:
@@ -82,18 +72,6 @@ body:
         Identify sessions by their issue number in this GitHub repo (e.g., `#32, #18`). Space- or comma-separated list.
     validations:
       required: false
-
-  - type: dropdown
-    id: capacity
-    attributes:
-      label: Estimated number of in-person attendees
-      options:
-        - Don't know (Default)
-        - Fewer than 20 people
-        - 20-45 people
-        - More than 45 people
-    validations:
-      required: true
 
   - type: textarea
     id: comments
