@@ -16,6 +16,8 @@ jobs:
   validate-session:
     name: Validate breakout session
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     # We're only interested in "session" issues
     if: ${{ contains(github.event.issue.labels.*.name, 'session') }}
     steps:
