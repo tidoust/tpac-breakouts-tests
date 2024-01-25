@@ -69,11 +69,13 @@ jobs:
         shell: bash
 
       - name: Validate session and update issue labels accordingly
-        run: npx validate-session ${{ github.event.issue.number }} changes.json
+        run: npx validate-session $NUMBER changes.json
         env:
           # See above for PROJECT_XX variables
           PROJECT_OWNER: ${{ vars.PROJECT_OWNER_TYPE || 'organization' }}/${{ vars.PROJECT_OWNER || 'w3c' }}
           PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+
+          NUMBER: ${{ github.event.issue.number }}
 
           # Same valid Personal Access Token (classic version) as above, with
           # project and public_repo scope.
